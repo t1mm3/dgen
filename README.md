@@ -3,6 +3,7 @@ dgen is a flexible data generator for testing and benchmarking purpose.
 It aims at producing in the desired format quickly and, hence, can be used for generating large amounts of data.
 
 # Configuration
+To generate data dgen expects a configuration file in JSON format which describes the columns to be generated, output size, output format etc.
 
 ```javascript
 {
