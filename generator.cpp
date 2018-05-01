@@ -292,13 +292,8 @@ to_str(const ColSpec& col, size_t colid, size_t num)
 			fix_ptrs(s, num, max_chars, &buf[0]);
 			str_int(s, &scol.len[0], a, num, &scol.tmp_vals[0], &scol.tmp_pred[0], &scol.tmp_sel[0], &scol.tmp_sel2[0]);
 		},
-		[&] (String cstr)  {
-			assert(false && "not impl'd");
-
-			throw std::bad_alloc();
-
-			// lookup in dict
-			// calc strlen	
+		[] (String cstr) {
+			// already a string
 		}
 	);
 }
@@ -415,10 +410,9 @@ NO_INLINE void generate(RelSpec& spec, Output& out) {
 	// create dictionaries
 	for (auto& col : spec.cols) {
 		col.ctype.match(
-			[&] (String cstr) {
+			[&] (String& cstr) {
 				assert(!cstr.dict);
 				cstr.dict = new FileDictionary(cstr.fname);
-
 				objs.emplace_back(std::unique_ptr<Dictionary>(cstr.dict));
 			},
 			[] (Integer cint) {}
