@@ -1,0 +1,3 @@
+#include "test/buildpaths.hpp"
+
+const char* const g_path = "@TEST_PATH@";

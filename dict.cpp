@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <cassert>
+#include <stdexcept>
 
 Buffer::Buffer()
  : size(0), next(nullptr)
@@ -76,6 +77,8 @@ FileDictionary::FileDictionary(const std::string& file)
 				ssize_t len = end - start;
 				assert(len > 0);
 
+				std::cerr << start << std::endl;
+
 				Insert(start, len);
 			};
 
@@ -96,6 +99,6 @@ FileDictionary::FileDictionary(const std::string& file)
 			throw;
 		}		
 	} else {
-		std::cerr << "could not map the file " << file << std::endl;
+		throw std::invalid_argument("could not map the file '" + file + "'");
 	}
 }
