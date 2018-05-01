@@ -69,6 +69,15 @@ NO_INLINE size_t sel_gt0(int* R out, size_t num, int64_t* pred, int* R sel) {
 	return res;
 }
 
+
+NO_INLINE size_t sel_not0(int* R out, size_t num, int64_t* pred, int* R sel) {
+	size_t res = 0;
+	VectorExec(sel, num, [&] (auto m) {
+		out[res] = m;
+		res += !!pred[m];
+	});
+	return res;
+}
 NO_INLINE size_t sel_0(int* R out, size_t num, int64_t* pred, int* R sel) {
 	size_t res = 0;
 	VectorExec(sel, num, [&] (auto m) {
@@ -110,8 +119,8 @@ NO_INLINE void str_int_round(char** R s, size_t* R len, int64_t* R a, int64_t* R
 NO_INLINE void str_int(char** R s, size_t* R len, int64_t* R a, size_t num, int64_t* R log10, bool* R tmp_pred, int* R tmp_sel, int* R tmp_sel2) {
 	// handle 0 and forget about them
 	{
-		sel_0(tmp_sel, num, a, nullptr);
-		VectorExec(tmp_sel, num, [&] (auto i) {
+		size_t curr = sel_0(tmp_sel, num, a, nullptr);
+		VectorExec(tmp_sel, curr, [&] (auto i) {
 			char* d = s[i];
 			*d = '0';
 			d++;
@@ -122,7 +131,7 @@ NO_INLINE void str_int(char** R s, size_t* R len, int64_t* R a, size_t num, int6
 
 	// init and handle 0 and minus
 	{
-		sel_gt0(tmp_sel, num, a, nullptr);
+		num = sel_not0(tmp_sel, num, a, nullptr);
 		VectorExec(tmp_sel, num, [&] (auto i) {
 			len[i] = 0;
 			if (a[i] < 0) {

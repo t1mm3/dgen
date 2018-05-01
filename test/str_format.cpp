@@ -11,15 +11,20 @@ BOOST_AUTO_TEST_CASE(rd_log10) {
 	auto check = [] (uint64_t x, uint64_t y) {
 		uint64_t r;
 		rounddown_log10(&r, &x, 1, nullptr);
-		BOOST_REQUIRE_EQUAL(r, y);	
+		BOOST_CHECK_EQUAL(r, y);	
 	};
 	
 	check(1, 1);
 	check(9, 1);
 	check(10, 10);
 	check(11, 10);
+	check(15, 10);
+	check(16, 10);
+	check(17, 10);
 	check(99, 10);
 	check(100, 100);
+	check(9172, 1000);
+	check(9999, 1000);
 }
 
 
@@ -43,8 +48,9 @@ void check_str_int(int64_t a) {
 
 	size_t len2 = snprintf(str2, 1024, "%ld", a);
 
+
 	BOOST_REQUIRE_EQUAL(len1, len2);
-	BOOST_TEST(str1 == str2);
+	BOOST_REQUIRE_EQUAL(str1, str2);
 }
 
 BOOST_AUTO_TEST_CASE(int2str) {
