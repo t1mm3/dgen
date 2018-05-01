@@ -5,10 +5,13 @@
 
 #include "conf.hpp"
 #include "generator.hpp"
+#include "build.hpp"
 
 int main(int argc, char* argv[]) {
 	std::ios_base::sync_with_stdio(false);
 	RelSpec spec;
+
+	std::cerr << "dgen " << Build::GetVersionStr() << std::endl;
 
 	namespace po = boost::program_options;
 	// Declare the supported options.
