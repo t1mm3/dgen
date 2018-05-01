@@ -3,17 +3,11 @@
 
 #include <vector>
 #include <stdint.h>
-#include <mapbox/variant.hpp>
 
-struct String {
-
+enum ColType {
+	String,
+	Integer,
 };
-
-struct Integer {
-
-};
-
-using ColType = variant<String, Integer>;
 
 enum ColGenType {
 	Random,
