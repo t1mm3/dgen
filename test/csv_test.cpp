@@ -24,7 +24,7 @@ CsvChecker::operator()() {
 	spec.threads = threads;
 	spec.card = card;
 
-	spec.cols = { ColSpec {Integer, Sequential, 0, 101}, ColSpec {Integer, Random, 0, 10013}, ColSpec {Integer, Random, -100, 104200} };
+	spec.cols = { ColSpec {Integer {}, Sequential, 0, 101}, ColSpec {Integer {}, Random, 0, 10013}, ColSpec {Integer {}, Random, -100, 104200} };
 
 	spec.kSep = "|";
 	spec.kSepLen = 1;
@@ -62,9 +62,8 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 			const auto& scol = spec.cols[col];
 
 			// check a value
-			switch (scol.ctype) {
-			case Integer:
-				{
+			scol.ctype.match(
+				[&] (Integer unused1) {
 					BOOST_REQUIRE(val.size() > 0);
 					auto ival = std::stoll(val);
 
@@ -73,13 +72,11 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 					}
 					BOOST_CHECK(ival >= scol.min);
 					BOOST_CHECK(ival < scol.max);
+				},
+				[&] (String unused2) {
+					BOOST_REQUIRE(false);
 				}
-				break;
-
-			default:
-				BOOST_REQUIRE(false);
-				break;
-			}
+			);
 
 			col++;
 		}

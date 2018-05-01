@@ -3,11 +3,25 @@
 
 #include <vector>
 #include <stdint.h>
+#include <mapbox/variant.hpp>
 
-enum ColType {
-	String,
-	Integer,
+struct Dictionary;
+
+struct Integer;
+
+struct String {
+	FileDictionary* dict;
+	Integer index;
 };
+
+struct Integer {
+
+};
+
+using mapbox::util::variant;
+using mapbox::util::recursive_wrapper;
+
+using ColType = variant<recursive_wrapper<String>, Integer>;
 
 enum ColGenType {
 	Random,

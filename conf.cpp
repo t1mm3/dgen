@@ -29,12 +29,12 @@ void parse_config(std::string&& fname, RelSpec& spec) {
 	spec.threads = root.get<size_t>("threads", std::thread::hardware_concurrency());
 
 	for (pt::ptree::value_type &col : root.get_child("columns")) {
-		auto parse_ctype = [] (std::string& v) {
+		auto parse_ctype = [] (std::string& v) -> ColType {
 			if (boost::iequals(v, "integer") || boost::iequals(v, "int")) {
-				return Integer;
+				return Integer();
 			}
 			if (boost::iequals(v, "string") || boost::iequals(v, "str")) {
-				return String;
+				return String();
 			}
 			throw InvalidConf("invalid gdata.type");
 		};

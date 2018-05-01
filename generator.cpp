@@ -270,16 +270,13 @@ struct DoTask {
 
 NO_INLINE void DoTask::append_vector(std::string& out, size_t start, size_t num, const RelSpec& rel)
 {
-	auto get_max_chars = [] (const auto& col) -> size_t {
-		switch (col.ctype) {
-		case Integer:
-			return std::max(num_chars_int(col.max), num_chars_int(col.min));
-		case String:
-			return 512;
-		default:
-			assert(false);
-			return 0;
-		}
+	auto get_max_chars = [] (const auto& col) {
+		size_t r = 0;
+		col.ctype.match(
+			[&] (Integer unused1) { r = std::max(num_chars_int(col.max), num_chars_int(col.min)); },
+			[&] (String unused2)  { r = 512; }
+		);
+		return r;
 	};
 
 	size_t num_cols = rel.cols.size();
@@ -313,42 +310,41 @@ NO_INLINE void DoTask::append_vector(std::string& out, size_t start, size_t num,
 
 		scol.res = a;
 
-		switch (col.ctype) {
-		case String:
-			assert(col.min >= 0);
-			assert(false && "not impl'd");
+		col.ctype.match(
+			[&] (Integer unused1) {
+				auto& buf = scol.buf;
+				size_t max_chars = get_max_chars(col);
 
-			throw std::bad_alloc();
+				// null terminator
+				max_chars++;
 
-			// lookup in dict
-			// calc strlen
-			break;
-
-		case Integer:
-			auto& buf = scol.buf;
-			size_t max_chars = get_max_chars(col);
-
-			// null terminator
-			max_chars++;
-
-			// allocate
-			if (buf.size() < num*max_chars) {
-				buf.resize(num*max_chars);
-			}
-
-			fix_ptrs(s, num, max_chars, &buf[0]);
-			str_int(s, &scol.len[0], a, num, &scol.tmp_vals[0], &scol.tmp_pred[0], &scol.tmp_sel[0], &scol.tmp_sel2[0]);
-
-			Build::DebugOnly([&] () {
-				for (size_t i=0; i<num; i++) {
-					int64_t val = std::stoll(s[i]);
-					if (val >= col.min && val < col.max) {
-						continue;
-					}
+				// allocate
+				if (buf.size() < num*max_chars) {
+					buf.resize(num*max_chars);
 				}
-			});
-			break;
-		}
+
+				fix_ptrs(s, num, max_chars, &buf[0]);
+				str_int(s, &scol.len[0], a, num, &scol.tmp_vals[0], &scol.tmp_pred[0], &scol.tmp_sel[0], &scol.tmp_sel2[0]);
+
+				Build::DebugOnly([&] () {
+					for (size_t i=0; i<num; i++) {
+						int64_t val = std::stoll(s[i]);
+						if (val >= col.min && val < col.max) {
+							continue;
+						}
+					}
+				});
+			},
+			[&] (String unused2)  {
+				assert(col.min >= 0);
+				assert(false && "not impl'd");
+
+				throw std::bad_alloc();
+
+				// lookup in dict
+				// calc strlen	
+			}
+		);
 	}
 
 	// calculate positions
