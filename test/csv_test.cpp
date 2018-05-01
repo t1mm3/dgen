@@ -81,6 +81,9 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 			scol.ctype.match(
 				[&] (Integer cint) {
 					BOOST_REQUIRE(val.size() > 0);
+
+					BOOST_CHECK(strlen(val.c_str()) == val.size());
+					std::cerr << "ival=" << 0 << " from '" << val << "' min=" << cint.min << " max=" << cint.max << std::endl; 
 					auto ival = std::stoll(val);
 
 					if (ival < cint.min || ival >= cint.max) {
