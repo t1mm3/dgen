@@ -1,7 +1,13 @@
 {
+    "version" : "0.1",
     "tuples" : 10000,
     "threads" : 2,
     "columns" : [
-    
-    ]
+        { "Integer" : { "gen" : "random", "min" : 10, "max" : 100 } },   
+        { "String" : {"index" : { "Integer" : { "gen" : "random", "min" : 10, "max" : 100 } }, "file" : "@TEST_PATH@/words1.txt"}}
+    ],
+    "format" : {
+        "csv" : { "comma" : "|", "newline" : "\n"}
+    },
+    "output" : "stdout"
 }
