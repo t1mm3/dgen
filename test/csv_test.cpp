@@ -2,6 +2,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "conf.hpp"
 #include "spec.hpp"
 #include "generator.hpp"
 #include "outputs.hpp"
@@ -14,15 +15,18 @@ struct CsvChecker {
 	size_t card = 100;
 	bool string = false;
 
+	RelSpec spec;
+
+	CsvChecker(bool str);
+
 	void operator()();
 
 	void verify(const std::string& data, RelSpec& spec);
 };
 
-void
-CsvChecker::operator()() {
-	RelSpec spec;
-
+CsvChecker::CsvChecker(bool str = false)
+  : string(str)
+{
 	spec.threads = threads;
 	spec.card = card;
 
@@ -32,7 +36,7 @@ CsvChecker::operator()() {
 		ColSpec {Integer {Random, -100, 104200 } }, 
 	};
 
-	if (string) {
+	if (str) {
 		spec.cols.emplace_back(ColSpec {
 			String {
 				nullptr,
@@ -41,7 +45,10 @@ CsvChecker::operator()() {
 			}
 		});
 	}
+}
 
+void
+CsvChecker::operator()() {
 	spec.kSep = "|";
 	spec.kSepLen = 1;
 	spec.kNewlineSep = "\n";
@@ -153,4 +160,17 @@ BOOST_AUTO_TEST_CASE(csv_strs_backend) {
 			run();
 		}
 	}
+}
+
+BOOST_AUTO_TEST_CASE(json_parse) {
+	CsvChecker csv;
+
+	csv.spec.cols.clear();
+	csv.spec.card = 0;
+	csv.spec.threads = 0;
+
+	parse_config(std::string(g_path) + std::string("json_conf1.txt"),
+		csv.spec);
+
+	csv();
 }
