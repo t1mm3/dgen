@@ -7,15 +7,21 @@
 
 struct Dictionary;
 
-struct Integer;
-
-struct String {
-	FileDictionary* dict;
-	Integer index;
+enum ColGenType {
+	Random,
+	Sequential
 };
 
 struct Integer {
+	ColGenType cgen;
+	int64_t min;
+	int64_t max;
+};
 
+
+struct String {
+	Dictionary* dict;
+	Integer index;
 };
 
 using mapbox::util::variant;
@@ -23,16 +29,8 @@ using mapbox::util::recursive_wrapper;
 
 using ColType = variant<recursive_wrapper<String>, Integer>;
 
-enum ColGenType {
-	Random,
-	Sequential
-};
-
 struct ColSpec {
-	ColType ctype;
-	ColGenType cgen;
-	int64_t min;
-	int64_t max;
+	ColType ctype;	
 };
 
 struct RelSpec {

@@ -24,7 +24,11 @@ CsvChecker::operator()() {
 	spec.threads = threads;
 	spec.card = card;
 
-	spec.cols = { ColSpec {Integer {}, Sequential, 0, 101}, ColSpec {Integer {}, Random, 0, 10013}, ColSpec {Integer {}, Random, -100, 104200} };
+	spec.cols = {
+		ColSpec {Integer {Sequential, 0, 101} },
+		ColSpec {Integer {Random, 0, 10013} },
+		ColSpec {Integer {Random, -100, 104200 } } 
+	};
 
 	spec.kSep = "|";
 	spec.kSepLen = 1;
@@ -63,15 +67,15 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 
 			// check a value
 			scol.ctype.match(
-				[&] (Integer unused1) {
+				[&] (Integer cint) {
 					BOOST_REQUIRE(val.size() > 0);
 					auto ival = std::stoll(val);
 
-					if (ival < scol.min || ival >= scol.max) {
-						std::cerr << "ival=" << ival << " from '" << val << "' min=" << scol.min << " max=" << scol.max << std::endl; 
+					if (ival < cint.min || ival >= cint.max) {
+						std::cerr << "ival=" << ival << " from '" << val << "' min=" << cint.min << " max=" << cint.max << std::endl; 
 					}
-					BOOST_CHECK(ival >= scol.min);
-					BOOST_CHECK(ival < scol.max);
+					BOOST_CHECK(ival >= cint.min);
+					BOOST_CHECK(ival < cint.max);
 				},
 				[&] (String unused2) {
 					BOOST_REQUIRE(false);

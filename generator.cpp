@@ -10,6 +10,7 @@
 #include "pool.hpp"
 #include "build.hpp"
 #include "utils.hpp"
+#include "dict.hpp"
 
 #include <iostream>
 
@@ -267,18 +268,85 @@ struct DoTask {
 	void append_vector(std::string& out, size_t start, size_t num, const RelSpec& rel);
 };
 
+static void
+to_str(const ColSpec& col, size_t colid, size_t num)
+{
+	auto& scol = state.cols[colid];
+	int64_t* a = &scol.res[0];
+	char** s = &scol.s[0];
+
+	col.ctype.match(
+		[&] (Integer cint) {
+			auto& buf = scol.buf;
+			size_t max_chars = std::max(num_chars_int(cint.max), num_chars_int(cint.min));
+
+			// null terminator
+			max_chars++;
+
+			// allocate
+			if (buf.size() < num*max_chars) {
+				buf.resize(num*max_chars);
+			}
+
+			fix_ptrs(s, num, max_chars, &buf[0]);
+			str_int(s, &scol.len[0], a, num, &scol.tmp_vals[0], &scol.tmp_pred[0], &scol.tmp_sel[0], &scol.tmp_sel2[0]);
+		},
+		[&] (String cstr)  {
+			assert(false && "not impl'd");
+
+			throw std::bad_alloc();
+
+			// lookup in dict
+			// calc strlen	
+		}
+	);
+}
+
+static void
+gen_col(const ColType& ctype, const ColSpec& col, size_t colid, size_t start, size_t num, bool top_level)
+{
+	auto& scol = state.cols[colid];
+	int64_t* a = &scol.a[0];
+	char** s = &scol.s[0];
+
+	scol.res = nullptr;
+
+	ctype.match(
+		[&] (Integer cint) {
+			switch (cint.cgen) {
+				case Random:
+					gen_rand(a, num, start, cint.min, cint.max);
+					break;
+
+				case Sequential:
+					gen_seq(a, num, start, cint.min, cint.max);
+					break;
+
+				default:
+					assert(false);
+					break;
+				}
+
+			scol.res = a;
+		},
+		[&] (String cstr)  {
+			gen_col(cstr.index, col, colid, start, num, false);
+
+			assert(cstr.dict);
+			assert(scol.res);
+
+			cstr.dict->Lookup(s, &scol.len[0], (size_t*)scol.res, num, nullptr);
+		}
+	);
+
+	if (top_level) {
+		to_str(col, colid, num);
+	}
+}
+
 
 NO_INLINE void DoTask::append_vector(std::string& out, size_t start, size_t num, const RelSpec& rel)
 {
-	auto get_max_chars = [] (const auto& col) {
-		size_t r = 0;
-		col.ctype.match(
-			[&] (Integer unused1) { r = std::max(num_chars_int(col.max), num_chars_int(col.min)); },
-			[&] (String unused2)  { r = 512; }
-		);
-		return r;
-	};
-
 	size_t num_cols = rel.cols.size();
 	if (state.cols.size() < num_cols) {
 		state.cols.resize(num_cols);
@@ -287,64 +355,7 @@ NO_INLINE void DoTask::append_vector(std::string& out, size_t start, size_t num,
 	assert(num_cols > 0);
 
 	for (size_t c = 0; c < num_cols; c++) {
-		auto& col = rel.cols[c];
-		auto& scol = state.cols[c];
-		int64_t* a = &scol.a[0];
-		char** s = &scol.s[0];
-
-		switch (col.cgen) {
-		case Random:
-			gen_rand(a, num, start, col.min, col.max);
-			break;
-
-		case Sequential:
-			gen_seq(a, num, start, col.min, col.max);
-			break;
-
-		default:
-			assert(false);
-			break;
-		}
-
-		Build::DebugOnly([&] () { gen_assert(a, num, col.min, col.max); });
-
-		scol.res = a;
-
-		col.ctype.match(
-			[&] (Integer unused1) {
-				auto& buf = scol.buf;
-				size_t max_chars = get_max_chars(col);
-
-				// null terminator
-				max_chars++;
-
-				// allocate
-				if (buf.size() < num*max_chars) {
-					buf.resize(num*max_chars);
-				}
-
-				fix_ptrs(s, num, max_chars, &buf[0]);
-				str_int(s, &scol.len[0], a, num, &scol.tmp_vals[0], &scol.tmp_pred[0], &scol.tmp_sel[0], &scol.tmp_sel2[0]);
-
-				Build::DebugOnly([&] () {
-					for (size_t i=0; i<num; i++) {
-						int64_t val = std::stoll(s[i]);
-						if (val >= col.min && val < col.max) {
-							continue;
-						}
-					}
-				});
-			},
-			[&] (String unused2)  {
-				assert(col.min >= 0);
-				assert(false && "not impl'd");
-
-				throw std::bad_alloc();
-
-				// lookup in dict
-				// calc strlen	
-			}
-		);
+		gen_col(rel.cols[c].ctype, rel.cols[c], c, start, num, true);
 	}
 
 	// calculate positions

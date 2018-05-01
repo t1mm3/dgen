@@ -31,20 +31,20 @@ void parse_config(std::string&& fname, RelSpec& spec) {
 	for (pt::ptree::value_type &col : root.get_child("columns")) {
 		auto parse_ctype = [] (std::string& v) -> ColType {
 			if (boost::iequals(v, "integer") || boost::iequals(v, "int")) {
-				return Integer();
+				// return Integer();
 			}
 			if (boost::iequals(v, "string") || boost::iequals(v, "str")) {
-				return String();
+				// return String();
 			}
 			throw InvalidConf("invalid gdata.type");
 		};
 
 		auto parse_cgen = [] (std::string& v) {
 			if (boost::iequals(v, "sequential")) {
-				return Sequential;
+				//return Sequential;
 			}
 			if (boost::iequals(v, "random")) {
-				return Random;
+				//return Random;
 			}
 			throw InvalidConf("invalid gen.type");
 		};
@@ -53,14 +53,14 @@ void parse_config(std::string&& fname, RelSpec& spec) {
 			ColSpec r;
 			std::string str;
 
-			r.min = node.get<int64_t>("min", 0);
-			r.max = node.get<int64_t>("max", 0);
+			//r.min = node.get<int64_t>("min", 0);
+			//r.max = node.get<int64_t>("max", 0);
 
 			str = node.get<std::string>("data.type");
 			r.ctype = parse_ctype(str);
 
 			str = node.get<std::string>("gen.type");
-			r.cgen = parse_cgen(str);
+			//r.cgen = parse_cgen(str);
 
 			return std::move(r);
 		};
