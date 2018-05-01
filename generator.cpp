@@ -334,7 +334,12 @@ NO_INLINE void DoTask::operator()(Task&& t) {
 
 NO_INLINE void generate(RelSpec& spec, Output& out) {
 	assert(spec.threads > 0);
-	ThreadPool<Task, DoTask> g_pool(spec.threads);
+	assert(g_chunk_size > 0);
+	assert(g_vector_size > 0);
+
+	auto num_threads = std::min(spec.threads, (spec.card / (g_chunk_size + g_chunk_size - 1)));
+
+	ThreadPool<Task, DoTask> g_pool(num_threads);
 
 	size_t num = spec.card;
 	// split sequential rang into chunks
