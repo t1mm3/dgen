@@ -435,7 +435,6 @@ NO_INLINE void generate(RelSpec& spec, Output& out) {
 	ThreadPool<Task, DoTask> g_pool(num_threads);
 
 	size_t num = spec.card;
-	// split sequential rang into chunks
 	size_t todo = num;
 	size_t offset = 0;
 

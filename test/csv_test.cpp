@@ -5,12 +5,14 @@
 #include "spec.hpp"
 #include "generator.hpp"
 #include "outputs.hpp"
+#include "test/buildpaths.hpp"
 #include <iostream>
 #include <mutex>
 
 struct CsvChecker {
 	size_t threads = 2;
 	size_t card = 100;
+	bool string = false;
 
 	void operator()();
 
@@ -27,8 +29,18 @@ CsvChecker::operator()() {
 	spec.cols = {
 		ColSpec {Integer {Sequential, 0, 101} },
 		ColSpec {Integer {Random, 0, 10013} },
-		ColSpec {Integer {Random, -100, 104200 } } 
+		ColSpec {Integer {Random, -100, 104200 } }, 
 	};
+
+	if (string) {
+		spec.cols.emplace_back(ColSpec {
+			String {
+				nullptr,
+				(std::string(g_path) + std::string("words1.txt")),
+				Integer {Random, 0, 5 }
+			}
+		});
+	}
 
 	spec.kSep = "|";
 	spec.kSepLen = 1;
@@ -78,7 +90,7 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 					BOOST_CHECK(ival < cint.max);
 				},
 				[&] (String unused2) {
-					BOOST_REQUIRE(false);
+					BOOST_REQUIRE(string);
 				}
 			);
 
@@ -100,6 +112,27 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 
 BOOST_AUTO_TEST_CASE(csv_ints_backend) {
 	CsvChecker csv;
+
+	for (int threads=1; threads<=8; threads*=2) {
+		for (size_t card = 100; card <= 1000000; card *= 10) {
+			csv.card = card;
+			auto run = [&] () {
+				csv.threads = threads;
+
+				std::cerr << "card=" << card << " threads=" << threads << std::endl;
+				csv();
+			};
+
+			run();
+		}
+	}
+}
+
+
+BOOST_AUTO_TEST_CASE(csv_strs_backend) {
+	CsvChecker csv;
+
+	csv.string = true;
 
 	for (int threads=1; threads<=8; threads*=2) {
 		for (size_t card = 100; card <= 1000000; card *= 10) {
