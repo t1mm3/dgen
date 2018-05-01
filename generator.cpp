@@ -8,6 +8,7 @@
 #include "outputs.hpp"
 #include "spec.hpp"
 #include "pool.hpp"
+#include "build.hpp"
 
 #include <iostream>
 
@@ -23,6 +24,14 @@ constexpr size_t g_vector_size = 1024;
 #else
 #define NO_INLINE
 #endif
+
+NO_INLINE void gen_assert(int64_t* R a, size_t num, int64_t min, int64_t max)
+{
+	for (size_t i=0; i<num; i++) {
+		assert(a[i] >= min);
+		assert(a[i] < max);
+	}
+}
 
 NO_INLINE void gen_rand(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max) {
 	std::mt19937 rng(seed);
@@ -70,7 +79,7 @@ NO_INLINE size_t sel_true(int* R out, size_t num, bool* pred, int* R sel) {
 #undef KERNEL
 }
 
-NO_INLINE void str_int_round(char** R s, size_t* R len, int64_t* R a, size_t num, size_t max_chars, bool* R tmp_pred, int* R sel) {
+NO_INLINE void str_int_round(char** R s, size_t* R len, int64_t* R a, size_t num, bool* R tmp_pred, int* R sel) {
 #define KERNEL(m) \
 	char* dst = s[m] + len[m]; \
 	*dst = '0' + (a[m] % 10); \
@@ -99,7 +108,7 @@ NO_INLINE void str_int_round(char** R s, size_t* R len, int64_t* R a, size_t num
 #undef KERNEL
 }
 
-NO_INLINE void str_int(char** R s, size_t* R len, int64_t* R a, size_t num, size_t max_chars, bool* R tmp_pred, int* R tmp_sel) {
+NO_INLINE void str_int(char** R s, size_t* R len, int64_t* R a, size_t num, bool* R tmp_pred, int* R tmp_sel, int* R tmp_sel2) {
 	// handle minus
 	for (size_t i=0; i<num; i++) {
 		len[i] = 0;
@@ -114,9 +123,22 @@ NO_INLINE void str_int(char** R s, size_t* R len, int64_t* R a, size_t num, size
 	size_t curr = num;
 
 	while (curr > 0) {
-		str_int_round(s, len, a, curr, max_chars, tmp_pred, sel);
+		str_int_round(s, len, a, curr, tmp_pred, sel);
 
-		curr = sel_true(tmp_sel, curr, tmp_pred, sel);
+		int* newsel = tmp_sel;
+
+		if (sel == tmp_sel) {
+			newsel = tmp_sel2;
+		}
+		curr = sel_true(newsel, curr, tmp_pred, sel);
+
+		sel = newsel;
+	}
+
+	// terminate with \0
+	for (size_t i=0; i<num; i++) {
+		char* dst = s[i] + len[i];
+		*dst = '\0';
 	}
 }
 
@@ -152,6 +174,7 @@ struct VData {
 
 	bool tmp_pred[g_vector_size];
 	int tmp_sel[g_vector_size];
+	int tmp_sel2[g_vector_size];
 
 	size_t pos[g_vector_size];
 
@@ -193,6 +216,8 @@ constexpr size_t num_chars_int(int64_t x) {
 	do {
 		r++;
 	} while (x /= 10);
+
+	r++; // terminator
 
 	return r;
 }
@@ -253,6 +278,8 @@ NO_INLINE void DoTask::append_vector(std::string& out, size_t start, size_t num,
 			break;
 		}
 
+		Build::DebugOnly([&] () { gen_assert(a, num, col.min, col.max); });
+
 		scol.res = a;
 
 		switch (col.ctype) {
@@ -278,8 +305,24 @@ NO_INLINE void DoTask::append_vector(std::string& out, size_t start, size_t num,
 				buf.resize(num*max_chars);
 			}
 
+			std::cerr << "max= "<< max_chars << std::endl;
+			std::cerr << "a[16] = " << a[16] << std::endl; 
+			std::cerr << "a[40] = " << a[40] << std::endl; 
+			std::cerr << "a[87] = " << a[87] << std::endl; 
+
 			fix_ptrs(s, num, max_chars, &buf[0]);
-			str_int(s, &scol.len[0], a, num, max_chars, &scol.tmp_pred[0], &scol.tmp_sel[0]);
+			str_int(s, &scol.len[0], a, num, &scol.tmp_pred[0], &scol.tmp_sel[0], &scol.tmp_sel2[0]);
+
+			Build::DebugOnly([&] () {
+				for (size_t i=0; i<num; i++) {
+					int64_t val = std::stoll(s[i]);
+					if (val >= col.min && val < col.max) {
+						continue;
+					}
+
+					std::cerr << "FAILED i=" << i << "a=" << a[i] << " ival=" << val << " from '" << s[i] << "' min=" << col.min << " max=" << col.max << std::endl; 
+				}
+			});
 			break;
 		}
 	}

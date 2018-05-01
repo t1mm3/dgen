@@ -6,6 +6,7 @@
 #include "generator.hpp"
 #include "outputs.hpp"
 #include <iostream>
+#include <mutex>
 
 struct CsvChecker {
 	size_t threads = 2;
@@ -23,14 +24,17 @@ CsvChecker::operator()() {
 	spec.threads = threads;
 	spec.card = card;
 
-	spec.cols = { ColSpec {Integer, Sequential, 0, 100}, ColSpec {Integer, Random, 0, 10000}, ColSpec {Integer, Random, -100, 10000} };
+	spec.cols = { ColSpec {Integer, Sequential, 0, 101}, ColSpec {Integer, Random, 0, 10013}, ColSpec {Integer, Random, -100, 104200} };
 
 	spec.kSep = "|";
 	spec.kSepLen = 1;
 	spec.kNewlineSep = "\n";
 	spec.kNewlineSepLen = 1;
 
+	std::mutex lock;
+
 	CheckOutput outp([&] (const std::string& data) {
+		std::lock_guard<std::mutex> guard(lock);
 		verify(data, spec);
 	});
 	generate(spec, outp);
@@ -62,8 +66,11 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 			case Integer:
 				{
 					BOOST_REQUIRE(val.size() > 0);
-					std::cerr << "val='"<< val <<"'" << std::endl;
-					auto ival = std::stoi(val);
+					auto ival = std::stoll(val);
+
+					if (ival < scol.min || ival >= scol.max) {
+						std::cerr << "ival=" << ival << " from '" << val << "' min=" << scol.min << " max=" << scol.max << std::endl; 
+					}
 					BOOST_CHECK(ival >= scol.min);
 					BOOST_CHECK(ival < scol.max);
 				}
@@ -78,31 +85,38 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 		}
 
 		if (ss.good()) {
-			BOOST_REQUIRE(col == spec.cols.size());
+			BOOST_REQUIRE_EQUAL(col, spec.cols.size());
+			BOOST_REQUIRE(num_lines < card);
+			num_lines++;
 		} else {
-			BOOST_REQUIRE(col == 0);
+			BOOST_REQUIRE_EQUAL(col, 0);
+			BOOST_REQUIRE_EQUAL(num_lines, card);
 		}
-
-		BOOST_REQUIRE(num_lines < card);
-		std::cerr << "line " << num_lines << std::endl;
-		num_lines++;
 	}
 
-	BOOST_REQUIRE(num_lines == card);
+	BOOST_REQUIRE_EQUAL(num_lines, card);
 }
 
 BOOST_AUTO_TEST_CASE(csv_ints_backend) {
 	CsvChecker csv;
 
-	for (size_t card = 100; card < 1000000; card *= 10) {
-		csv.card = card;
-		auto run = [&] () {
-			for (int i=1; i<8; i*=2) {
-				csv.threads = i;
-				csv();
+	for (int threads=1; threads<=8; threads*=2) {
+		if (threads != 1) {
+			continue;
+		}
+		for (size_t card = 100; card <= 1000000; card *= 10) {
+			if (card != 100) {
+				continue;
 			}
-		};
+			csv.card = card;
+			auto run = [&] () {
+				csv.threads = threads;
 
-		run();
+				std::cerr << "card=" << card << " threads=" << threads << std::endl;
+				csv();
+			};
+
+			run();
+		}
 	}
 }
