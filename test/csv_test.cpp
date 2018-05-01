@@ -108,7 +108,7 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 
 		if (ss.good()) {
 			BOOST_REQUIRE_EQUAL(col, spec.cols.size());
-			BOOST_REQUIRE(num_lines < card);
+			BOOST_REQUIRE(num_lines < spec.card);
 			num_lines++;
 		} else {
 			BOOST_REQUIRE_EQUAL(col, 0);

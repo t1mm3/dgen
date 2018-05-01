@@ -3,8 +3,8 @@
     "tuples" : 10000,
     "threads" : 2,
     "columns" : [
-        { "Integer" : { "gen" : "random", "min" : 10, "max" : 100 } },   
-        { "String" : {"index" : { "Integer" : { "gen" : "random", "min" : 10, "max" : 100 } }, "file" : "@TEST_PATH@/words1.txt"}}
+        { "integer" : { "gen" : "random", "min" : 10, "max" : 100 } },
+        { "integer" : { "gen" : "random", "min" : -10, "max" : 10 } }
     ],
     "format" : {
         "csv" : { "comma" : "|", "newline" : "\n"}
