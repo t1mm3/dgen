@@ -105,11 +105,8 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 			num_lines++;
 		} else {
 			BOOST_REQUIRE_EQUAL(col, 0);
-			BOOST_REQUIRE_EQUAL(num_lines, card);
 		}
 	}
-
-	BOOST_REQUIRE_EQUAL(num_lines, card);
 }
 
 BOOST_AUTO_TEST_CASE(csv_ints_backend) {

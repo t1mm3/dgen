@@ -387,7 +387,7 @@ NO_INLINE void DoTask::operator()(Task&& t) {
 	size_t off = t.start;
 
 	std::string final;
-	final.reserve(1024*1024);
+	final.reserve(1024*1024*10);
 
 	while (off < t.end) {
 		size_t num = std::min(g_vector_size, t.end - off);
