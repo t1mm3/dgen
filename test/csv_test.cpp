@@ -48,21 +48,20 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 
 		std::stringstream ls(line);
 		size_t col = 0;
-		while (ls.good()) {
+		while (ls.good() && ss.good()) {
 			// get a value
 			std::string val;
 			getline(ls, val, '|');
 
-			// enforce schema
-			BOOST_CHECK(col < spec.cols.size());
+			BOOST_REQUIRE(col < spec.cols.size());
 
-			auto& scol = spec.cols[col];
+			const auto& scol = spec.cols[col];
 
 			// check a value
 			switch (scol.ctype) {
 			case Integer:
 				{
-					BOOST_CHECK(val.size() > 0);
+					BOOST_REQUIRE(val.size() > 0);
 					std::cerr << "val='"<< val <<"'" << std::endl;
 					auto ival = std::stoi(val);
 					BOOST_CHECK(ival >= scol.min);
@@ -77,14 +76,19 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 
 			col++;
 		}
-		BOOST_CHECK(col == spec.cols.size());
 
-		BOOST_CHECK(num_lines < card);
+		if (ss.good()) {
+			BOOST_REQUIRE(col == spec.cols.size());
+		} else {
+			BOOST_REQUIRE(col == 0);
+		}
+
+		BOOST_REQUIRE(num_lines < card);
 		std::cerr << "line " << num_lines << std::endl;
 		num_lines++;
 	}
 
-	BOOST_CHECK(num_lines == card);
+	BOOST_REQUIRE(num_lines == card);
 }
 
 BOOST_AUTO_TEST_CASE(csv_ints_backend) {
