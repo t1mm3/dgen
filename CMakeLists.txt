@@ -16,6 +16,8 @@ ADD_DEFINITIONS(
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -O3")
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/variant/include)
+
 ## Required software
 find_package(Threads REQUIRED)
 
