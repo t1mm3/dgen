@@ -45,6 +45,17 @@ NO_INLINE void gen_uni(int64_t* R res, size_t num, int64_t seed, int64_t min, in
 	}
 }
 
+NO_INLINE void gen_poisson(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max, double mean) {
+	std::mt19937 rng(seed);
+	std::poisson_distribution<int64_t> uni(mean);
+	int64_t dom = max - min;
+
+	for (size_t i=0; i<num; i++) {
+		auto k = uni(rng);
+		res[i] = (k % dom) + min;
+	}
+}
+
 
 NO_INLINE void gen_seq(int64_t* R res, size_t num, int64_t start, int64_t min, int64_t max) {
 	assert(max >= min);
@@ -315,6 +326,9 @@ gen_col(const ColType& ctype, const ColSpec& col, size_t colid, size_t start, si
 				},
 				[&] (Uniform guni) {
 					gen_uni(a, num, start, cint.min, cint.max);
+				},
+				[&] (Poisson gpoisson) {
+					gen_poisson(a, num, start, cint.min, cint.max, gpoisson.mean);
 				}
 			);
 

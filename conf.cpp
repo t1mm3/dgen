@@ -73,7 +73,31 @@ parse_integer(pt::ptree& node)
 				r.cgen = Sequential {};
 				matches++;
 			}
-			
+
+			if (t.second.data() == "poisson") {
+				r.cgen = Poisson {};
+				matches++;
+			}
+
+			for (pt::ptree::value_type &i : t.second) {
+				if (i.first == "uniform" || i.first == "random") {
+					r.cgen = Uniform {};
+					matches++;
+				}
+				if (i.first == "sequential") {
+					r.cgen = Sequential {};
+					matches++;
+				}
+				if (i.first == "poisson") {
+					auto n = i.second;
+
+					auto p = Poisson {};
+					p.mean = i.second.get<double>("mean", p.mean);
+					r.cgen = p;
+
+					matches++;
+				}
+			}
 		}
 	}
 

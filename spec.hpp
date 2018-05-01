@@ -12,9 +12,10 @@ struct Dictionary;
 
 struct Sequential {};
 struct Uniform {};
+struct Poisson { double mean = 1.0; };
 
 
-using ColGenType = variant<Uniform, Sequential>;
+using ColGenType = variant<Uniform, Sequential, Poisson>;
 
 
 struct Integer {
