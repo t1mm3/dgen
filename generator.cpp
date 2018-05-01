@@ -36,7 +36,7 @@ NO_INLINE void gen_assert(int64_t* R a, size_t num, int64_t min, int64_t max)
 	}
 }
 
-NO_INLINE void gen_rand(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max) {
+NO_INLINE void gen_uni(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max) {
 	std::mt19937 rng(seed);
 	std::uniform_int_distribution<int64_t> uni(min,max);
 
@@ -314,7 +314,7 @@ gen_col(const ColType& ctype, const ColSpec& col, size_t colid, size_t start, si
 					gen_seq(a, num, start, cint.min, cint.max);
 				},
 				[&] (Uniform guni) {
-					gen_rand(a, num, start, cint.min, cint.max);
+					gen_uni(a, num, start, cint.min, cint.max);
 				}
 			);
 
