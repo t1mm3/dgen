@@ -1,5 +1,7 @@
 #include "conf.hpp"
+#include "build.hpp"
 
+#include <iostream>
 #include <thread>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -15,7 +17,43 @@ struct InvalidConf : std::exception {
 	}
 };
 
-void parse_config(std::string&& fname, RelSpec& spec) {
+void check_version(const std::string& str)
+{
+	std::istringstream f(str);
+	std::string s;
+
+	int i = 0;
+	bool good = true;
+
+	while (getline(f, s, '.')) {
+		auto ival = std::stoll(s);
+		switch (i) {
+		case 0:
+			good &= Build::GetVersionMajor() >= ival;
+			break;
+		case 1:
+			good &= Build::GetVersionMinor() >= ival;
+			break;
+		default:
+			throw InvalidConf("Invalid version");
+			break;
+		}
+		i++;
+	}
+
+	if (!good) {
+		throw InvalidConf("Configuration is from a future version");
+	}
+
+	if (!i) {
+		throw InvalidConf("Configuration requires a version");
+	}
+
+	std::cerr << "Version okay" << std::endl;
+}
+
+void parse_config(std::string&& fname, RelSpec& spec)
+{
 	// Short alias for this namespace
 	namespace pt = boost::property_tree;
 
@@ -24,6 +62,9 @@ void parse_config(std::string&& fname, RelSpec& spec) {
 
 	// Load the json file in this ptree
 	pt::read_json(fname, root);
+
+	check_version(root.get<std::string>("version"));
+
 
 	spec.card = root.get<size_t>("tuples", 0);
 	spec.threads = root.get<size_t>("threads", std::thread::hardware_concurrency());
