@@ -9,6 +9,7 @@
 #include "spec.hpp"
 #include "pool.hpp"
 #include "build.hpp"
+#include "utils.hpp"
 
 #include <iostream>
 
@@ -59,133 +60,98 @@ NO_INLINE void fix_ptrs(char** R res, size_t num, size_t max_chars, char* R base
 	}
 }
 
+NO_INLINE size_t sel_gt0(int* R out, size_t num, int64_t* pred, int* R sel) {
+	size_t res = 0;
+	VectorExec(sel, num, [&] (auto m) {
+		out[res] = m;
+		res += pred[m] > 0;
+	});
+	return res;
+}
+
+NO_INLINE size_t sel_0(int* R out, size_t num, int64_t* pred, int* R sel) {
+	size_t res = 0;
+	VectorExec(sel, num, [&] (auto m) {
+		out[res] = m;
+		res += !pred[m];
+	});
+	return res;
+}
+
 NO_INLINE size_t sel_true(int* R out, size_t num, bool* pred, int* R sel) {
 	size_t res = 0;
-#define KERNEL(m) \
-	out[res] = m; \
-	res += !!pred[m];
-
-	if (sel) {
-		for (size_t i=0; i<num; i++) {
-			KERNEL(sel[i]);
-		}	
-	} else {
-		for (size_t i=0; i<num; i++) {
-			KERNEL(i);
-		}
-	}	
-
+	VectorExec(sel, num, [&] (auto m) {
+		out[res] = m;
+		res += !!pred[m];
+	});
 	return res;
-#undef KERNEL
 }
 
-#if 0
-NO_INLINE void str_int_rev_round(int64_t* R rev, int64_t* R a, size_t num, bool* R tmp_pred, int* R sel) {
-#define KERNEL(m) \
-	rev[m] = rev[m] * 10 + a[m] % 10; \
-	a[m] /= 10; \
-	tmp_pred[m] = a[m] != 0;
-
-	size_t i;
-	if (sel) {
-		for (i=0; i+8<num; i+=8) {
-			for (int k=0; k<8; k++) {
-				KERNEL(sel[i+k]);
-			}
-		}
-
-		while (i < num) {
-			KERNEL(sel[i]);
-			i++;
-		}
-	} else {
-		for (i=0; i<num; i++) {
-			KERNEL(i);
-		}
-	}	
-
-#undef KERNEL
-}
-#endif
-
-NO_INLINE void str_int_round(char** R s, size_t* R len, int64_t* R a, size_t num, bool* R tmp_pred, int* R sel) {
-#define KERNEL(m) \
-	char* dst = s[m] + len[m]; \
-	*dst = '0' + (a[m] % 10); \
-	len[m]++; \
-	a[m] /= 10; \
-	tmp_pred[m] = a[m] != 0;
-
-	size_t i;
-	if (sel) {
-		for (i=0; i+8<num; i+=8) {
-			for (int k=0; k<8; k++) {
-				KERNEL(sel[i+k]);
-			}
-		}
-
-		while (i < num) {
-			KERNEL(sel[i]);
-			i++;
-		}
-	} else {
-		for (i=0; i<num; i++) {
-			KERNEL(i);
-		}
-	}	
-
-#undef KERNEL
+NO_INLINE size_t sel_false(int* R out, size_t num, bool* pred, int* R sel) {
+	size_t res = 0;
+	VectorExec(sel, num, [&] (auto m) {
+		out[res] = m;
+		res += !pred[m];
+	});
+	return res;
 }
 
-NO_INLINE void str_int(char** R s, size_t* R len, int64_t* R a, size_t num, int64_t* R rev, bool* R tmp_pred, int* R tmp_sel, int* R tmp_sel2) {
-	// handle minus
-	for (size_t i=0; i<num; i++) {
-		len[i] = 0;
-		rev[i] = 0;
-		if (a[i] < 0) {
-			*s[i] = '-';
-			a[i] = -a[i];
-			len[i]++;
-		}
-	}
+NO_INLINE void str_int_round(char** R s, size_t* R len, int64_t* R a, int64_t* R div, size_t num, int* R sel) {
+	VectorExec(sel, num, [&] (auto m) {
+		char* dst = s[m] + len[m];
+		*dst = '0' + (a[m] / div[m]);
+		len[m]++;
 
-#if 0
-	// reverse digits
+		a[m] %= div[m];
+		div[m] /= 10;
+	});
+}
+
+NO_INLINE void str_int(char** R s, size_t* R len, int64_t* R a, size_t num, int64_t* R log10, bool* R tmp_pred, int* R tmp_sel, int* R tmp_sel2) {
+	// handle 0 and forget about them
 	{
-		int* sel = nullptr;
-		size_t curr = num;
-
-		while (curr > 0) {
-			str_int_rev_round(rev, a, curr, tmp_pred, sel);
-
-			int* newsel = tmp_sel;
-
-			if (sel == tmp_sel) {
-				newsel = tmp_sel2;
-			}
-			curr = sel_true(newsel, curr, tmp_pred, sel);
-
-			sel = newsel;
-		}
+		sel_0(tmp_sel, num, a, nullptr);
+		VectorExec(tmp_sel, num, [&] (auto i) {
+			char* d = s[i];
+			*d = '0';
+			d++;
+			*d = '\0';
+			len[i] = 1;
+		});
 	}
-#endif
+
+	// init and handle 0 and minus
+	{
+		sel_gt0(tmp_sel, num, a, nullptr);
+		VectorExec(tmp_sel, num, [&] (auto i) {
+			len[i] = 0;
+			if (a[i] < 0) {
+				*s[i] = '-';
+				len[i]++;
+				a[i] = -a[i];
+			}
+		});
+	}
+
+	rounddown_log10((uint64_t*)log10, (uint64_t*)a, num, tmp_sel);
+	// vec_log10_64(log10, (uint64_t*)a, num, tmp_sel, true);
 
 	// divide and modulo
 	{
-		int* sel = nullptr;
+		int* sel = tmp_sel;
 		size_t curr = num;
 
 		while (curr > 0) {
-			str_int_round(s, len, a, curr, tmp_pred, sel);
+			str_int_round(s, len, a, log10, curr, sel);
 
 			int* newsel = tmp_sel;
-
 			if (sel == tmp_sel) {
 				newsel = tmp_sel2;
 			}
-			curr = sel_true(newsel, curr, tmp_pred, sel);
-
+			curr = sel_gt0(newsel, curr, log10, sel);
 			sel = newsel;
+
+			
 		}
 	}
 
@@ -361,11 +327,6 @@ NO_INLINE void DoTask::append_vector(std::string& out, size_t start, size_t num,
 				buf.resize(num*max_chars);
 			}
 
-			std::cerr << "max= "<< max_chars << std::endl;
-			std::cerr << "a[16] = " << a[16] << std::endl; 
-			std::cerr << "a[40] = " << a[40] << std::endl; 
-			std::cerr << "a[87] = " << a[87] << std::endl; 
-
 			fix_ptrs(s, num, max_chars, &buf[0]);
 			str_int(s, &scol.len[0], a, num, &scol.tmp_vals[0], &scol.tmp_pred[0], &scol.tmp_sel[0], &scol.tmp_sel2[0]);
 
@@ -375,8 +336,6 @@ NO_INLINE void DoTask::append_vector(std::string& out, size_t start, size_t num,
 					if (val >= col.min && val < col.max) {
 						continue;
 					}
-
-					std::cerr << "FAILED i=" << i << "a=" << a[i] << " ival=" << val << " from '" << s[i] << "' min=" << col.min << " max=" << col.max << std::endl; 
 				}
 			});
 			break;

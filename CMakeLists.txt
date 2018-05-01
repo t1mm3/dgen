@@ -32,7 +32,7 @@ configure_file(build.cpp.in ${PROJECT_BINARY_DIR}/build.cpp)
 ## Sources and headers
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(libdgen SHARED outputs.cpp pool.cpp conf.cpp generator.cpp ${PROJECT_BINARY_DIR}/build.cpp)
+add_library(libdgen SHARED outputs.cpp pool.cpp conf.cpp generator.cpp utils.cpp ${PROJECT_BINARY_DIR}/build.cpp)
 
 add_executable(dgen gen.cpp)
 target_link_libraries(dgen ${CMAKE_THREAD_LIBS_INIT} ${Boost_LIBRARIES} libdgen)

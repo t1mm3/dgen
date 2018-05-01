@@ -3,7 +3,25 @@
 #include <boost/test/unit_test.hpp>
 
 #include "generator.hpp"
+#include "utils.hpp"
 #include <iostream>
+
+
+BOOST_AUTO_TEST_CASE(rd_log10) {
+	auto check = [] (uint64_t x, uint64_t y) {
+		uint64_t r;
+		rounddown_log10(&r, &x, 1, nullptr);
+		BOOST_REQUIRE_EQUAL(r, y);	
+	};
+	
+	check(1, 1);
+	check(9, 1);
+	check(10, 10);
+	check(11, 10);
+	check(99, 10);
+	check(100, 100);
+}
+
 
 extern void str_int(char** s, size_t* len, int64_t* a, size_t num, bool* tmp_pred, int* tmp_sel, int* tmp_sel2);
 
@@ -25,7 +43,6 @@ void check_str_int(int64_t a) {
 
 	size_t len2 = snprintf(str2, 1024, "%ld", a);
 
-	std::cerr << "a=" << a << std::endl;
 	BOOST_REQUIRE_EQUAL(len1, len2);
 	BOOST_TEST(str1 == str2);
 }
