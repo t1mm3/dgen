@@ -5,7 +5,7 @@
 #include "generator.hpp"
 #include "utils.hpp"
 #include <iostream>
-
+#include <limits>
 
 BOOST_AUTO_TEST_CASE(rd_log10) {
 	auto check = [] (uint64_t x, uint64_t y) {
@@ -53,12 +53,24 @@ void check_str_int(int64_t a) {
 	BOOST_REQUIRE_EQUAL(str1, str2);
 }
 
-BOOST_AUTO_TEST_CASE(int2str) {
+BOOST_AUTO_TEST_CASE(int2str_negative) {
 	for (int64_t i=-100; i<0; i++) {
 		check_str_int(i);
 	}
+}
 
+BOOST_AUTO_TEST_CASE(int2str_seq_positive) {
 	for (int64_t i=0; i<10000; i++) {
 		check_str_int(i);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(int2str_power2_env) {
+	int64_t max = std::numeric_limits<int64_t>::max()-1;
+	int64_t min = 1;
+	for (int64_t i=min; i<max; i*=2 ) {
+		check_str_int(i);
+		check_str_int(i-1);
+		check_str_int(i+1);
 	}
 }
