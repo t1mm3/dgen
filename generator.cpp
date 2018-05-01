@@ -12,6 +12,7 @@
 #include "utils.hpp"
 #include "dict.hpp"
 
+#include <memory>
 #include <iostream>
 
 size_t g_chunk_size = 16*1024;
@@ -410,6 +411,21 @@ NO_INLINE void generate(RelSpec& spec, Output& out) {
 	assert(spec.threads > 0);
 	assert(g_chunk_size > 0);
 	assert(g_vector_size > 0);
+
+	std::vector<std::unique_ptr<Dictionary>> objs;
+
+	// create dictionaries
+	for (auto& col : spec.cols) {
+		col.ctype.match(
+			[&] (String cstr) {
+				assert(!cstr.dict);
+				cstr.dict = new FileDictionary(cstr.fname);
+
+				objs.emplace_back(std::unique_ptr<Dictionary>(cstr.dict));
+			},
+			[] (Integer cint) {}
+		);
+	}
 
 	auto num_threads = std::min(spec.threads, (spec.card / (g_chunk_size + g_chunk_size - 1)));
 

@@ -20,7 +20,8 @@ struct Integer {
 
 
 struct String {
-	Dictionary* dict;
+	Dictionary* dict = nullptr;
+	std::string fname;
 	Integer index;
 };
 

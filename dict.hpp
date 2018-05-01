@@ -40,6 +40,8 @@ protected:
 public:
 	Dictionary();
 
+	virtual ~Dictionary();
+
 	size_t GetCount() const {
 		return m_index.size();
 	}
@@ -62,9 +64,11 @@ public:
 struct FileDictionary : Dictionary {
 private:
 	boost::iostreams::mapped_file_source m_file;
+	bool m_file_open;
 
 public:
 	FileDictionary(const std::string& file);
+	virtual ~FileDictionary();
 };
 
 #endif

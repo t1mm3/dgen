@@ -51,6 +51,11 @@ Dictionary::Dictionary()
 {
 }
 
+Dictionary::~Dictionary()
+{
+}
+
+
 void
 Dictionary::lookup(char** __restrict__ ptr, size_t* __restrict__ len,
 	size_t* __restrict__ indices, size_t num, int* __restrict__ sel,
@@ -66,6 +71,7 @@ Dictionary::lookup(char** __restrict__ ptr, size_t* __restrict__ len,
 FileDictionary::FileDictionary(const std::string& file)
  : Dictionary()
 {
+	m_file_open = false;
 	m_file.open(file);
 	if(m_file.is_open()) {
 		try {
@@ -92,11 +98,20 @@ FileDictionary::FileDictionary(const std::string& file)
 			}
 
 			push_word(begin, curr);
+
+			m_file_open = true;
 		} catch (...) {
 			m_file.close();
 			throw;
 		}		
 	} else {
 		throw std::invalid_argument("could not map the file '" + file + "'");
+	}
+}
+
+FileDictionary::~FileDictionary()
+{
+	if (m_file_open) {
+		m_file.close();
 	}
 }
