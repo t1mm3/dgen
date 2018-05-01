@@ -361,7 +361,7 @@ NO_INLINE void DoTask::append_vector(std::string& out, size_t start, size_t num,
 
 	// calculate positions
 	size_t size = calc_positions(0, num, num_cols, &state.cols[0], rel.GetSepLen(false), rel.GetSepLen(true));
-	out.resize(size+1);
+	out.resize(size);
 
 	char* dst = (char*)out.c_str();
 
@@ -375,8 +375,6 @@ NO_INLINE void DoTask::append_vector(std::string& out, size_t start, size_t num,
 
 		scatter_out(dst, &scol.pos[0], &scol.s[0], &scol.len[0], sep, sep_len, num);
 	}
-
-	dst[size] = '\0';
 }
 
 std::mutex lock;
