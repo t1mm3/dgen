@@ -184,3 +184,17 @@ BOOST_AUTO_TEST_CASE(json_parse_str) {
 
 	csv();
 }
+
+
+BOOST_AUTO_TEST_CASE(json_parse_str_inline) {
+	CsvChecker csv;
+
+	csv.spec.cols.clear();
+	csv.spec.card = 0;
+	csv.spec.threads = 0;
+
+	parse_config(std::string(g_path) + std::string("json_conf3.txt"),
+		csv.spec);
+
+	csv();
+}

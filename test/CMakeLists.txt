@@ -12,6 +12,7 @@ add_library(libtestdgen STATIC ${CMAKE_CURRENT_BINARY_DIR}/test_buildpaths.cpp)
 configure_file(words1.txt ${TEST_PATH}/words1.txt COPYONLY)
 configure_file(json_conf1.txt ${TEST_PATH}/json_conf1.txt)
 configure_file(json_conf2.txt ${TEST_PATH}/json_conf2.txt)
+configure_file(json_conf3.txt ${TEST_PATH}/json_conf3.txt)
 
 
 add_executable(str str_format.cpp)
