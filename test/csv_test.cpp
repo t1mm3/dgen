@@ -101,13 +101,7 @@ BOOST_AUTO_TEST_CASE(csv_ints_backend) {
 	CsvChecker csv;
 
 	for (int threads=1; threads<=8; threads*=2) {
-		if (threads != 1) {
-			continue;
-		}
 		for (size_t card = 100; card <= 1000000; card *= 10) {
-			if (card != 100) {
-				continue;
-			}
 			csv.card = card;
 			auto run = [&] () {
 				csv.threads = threads;
