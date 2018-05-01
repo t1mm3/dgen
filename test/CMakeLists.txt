@@ -22,14 +22,10 @@ target_link_libraries(dict libdgen libtestdgen ${Boost_FILESYSTEM_LIBRARY} ${Boo
 add_test(NAME Dict COMMAND dict)
 # add_dependencies(dict ${TEST_PATH}/words1.txt)
 
+add_executable(config config_test.cpp)
+target_link_libraries(config libdgen libtestdgen ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME ConfigTest COMMAND config)
 
 add_executable(csv csv_test.cpp)
 target_link_libraries(csv libdgen libtestdgen ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test(NAME CSV COMMAND csv)
-
-
-
-
-add_executable(config config_test.cpp)
-target_link_libraries(config libdgen libtestdgen ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-add_test(NAME ConfigTest COMMAND config)
