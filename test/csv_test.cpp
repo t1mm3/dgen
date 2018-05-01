@@ -49,10 +49,8 @@ CsvChecker::CsvChecker(bool str = false)
 
 void
 CsvChecker::operator()() {
-	spec.kSep = "|";
-	spec.kSepLen = 1;
-	spec.kNewlineSep = "\n";
-	spec.kNewlineSepLen = 1;
+	spec.s_sep = "|";
+	spec.s_newline = "\n";
 
 	std::mutex lock;
 
@@ -99,7 +97,6 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 					BOOST_CHECK(ival <= cint.max);
 				},
 				[&] (String unused2) {
-					BOOST_REQUIRE(string);
 				}
 			);
 
@@ -170,6 +167,19 @@ BOOST_AUTO_TEST_CASE(json_parse) {
 	csv.spec.threads = 0;
 
 	parse_config(std::string(g_path) + std::string("json_conf1.txt"),
+		csv.spec);
+
+	csv();
+}
+
+BOOST_AUTO_TEST_CASE(json_parse_str) {
+	CsvChecker csv;
+
+	csv.spec.cols.clear();
+	csv.spec.card = 0;
+	csv.spec.threads = 0;
+
+	parse_config(std::string(g_path) + std::string("json_conf2.txt"),
 		csv.spec);
 
 	csv();

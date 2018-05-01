@@ -48,8 +48,6 @@ void check_version(const std::string& str)
 	if (!i) {
 		throw InvalidConf("Configuration requires a version");
 	}
-
-	std::cerr << "Version okay" << std::endl;
 }
 
 namespace pt = boost::property_tree;
@@ -61,8 +59,6 @@ parse_integer(pt::ptree& node)
 
 	r.min = node.get<int64_t>("min", 0);
 	r.max = node.get<int64_t>("max");
-
-	std::cerr << "min=" << r.min << " max=" << r.max << std::endl;
 	r.cgen = Random;
 
 	return std::move(r);
@@ -72,11 +68,17 @@ String
 parse_string(pt::ptree& node)
 {
 	String r;
-
 	size_t matches = 0;
-	for (pt::ptree::value_type &col : node.get_child("index")) {
-		r.index = parse_integer(col.second);
-		matches++;
+
+	for (pt::ptree::value_type &t : node) {
+		if (t.first == "index") {
+			for (pt::ptree::value_type &i : t.second) {
+				if (i.first == "integer") {
+					r.index = parse_integer(i.second);
+					matches++;
+				}
+			}
+		}
 	}
 
 	assert(matches == 1);
@@ -91,29 +93,50 @@ ColSpec
 parse_column(pt::ptree& node)
 {
 	ColSpec r;
+
+	assert(!node.empty());
 	
 	size_t matches = 0;
-	pt::ptree& n = node.get_child("integer");
-	if (!n.empty()) {
-		r.ctype = parse_integer(n);
-		matches++;
-	}
-		
-	assert(matches <= 1);
 
-#if 0
-	n = node.get_child("string");
-	if (!n.empty()) {
-		r.ctype = parse_string(n);
-		matches++;
+	for (pt::ptree::value_type &t : node) {
+		if (t.first == "integer") {
+			r.ctype = parse_integer(t.second);
+			matches++;
+		}
+		if (t.first == "string") {
+			r.ctype = parse_string(t.second);
+			matches++;
+		}
 	}
-#endif
-	std::cerr << "column" << std::endl;
 
 	assert(matches == 1);
 	return r;
 }
 
+std::string
+unescape(const std::string& s)
+{
+	// from https://stackoverflow.com/questions/5612182/convert-string-with-explicit-escape-sequence-into-relative-character
+	std::string res;
+	std::string::const_iterator it = s.begin();
+	while (it != s.end()) {
+		char c = *it++;
+		if (c == '\\' && it != s.end()) {
+			switch (*it++) {
+				case '\\': c = '\\'; break;
+				case 'n': c = '\n'; break;
+				case 't': c = '\t'; break;
+				// all other escapes
+				default: 
+					// invalid escape sequence - skip it. alternatively you can copy it as is, throw an exception...
+					continue;
+			}
+		}
+		res += c;
+	}
+
+	return res;
+}
 
 void
 parse_config(std::string&& fname, RelSpec& spec)
@@ -133,4 +156,15 @@ parse_config(std::string&& fname, RelSpec& spec)
 	for (pt::ptree::value_type &col : root.get_child("columns")) {
 		spec.cols.push_back(parse_column(col.second));
 	}
+
+	size_t matches = 0;
+	for (pt::ptree::value_type &f : root.get_child("format")) {
+		if (f.first == "csv") {
+			spec.s_sep = unescape(f.second.get<std::string>("comma", "|"));
+			spec.s_newline = unescape(f.second.get<std::string>("newline", "\\n"));
+
+			matches++;
+		}
+	}
+	assert(matches == 1);
 }

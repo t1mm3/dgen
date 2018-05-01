@@ -39,26 +39,24 @@ struct RelSpec {
 	size_t card;
 	size_t threads;
 
-	const char* kSep = "|";
-	size_t kSepLen = 1;
-	const char* kNewlineSep = "|\n";
-	size_t kNewlineSepLen = 2;
+	std::string s_sep;
+	std::string s_newline;
 
 	size_t GetSepLen(bool endl) const
 	{
 		if (endl) {
-			return kNewlineSepLen;
+			return s_newline.size();
 		}
-		return kSepLen;
+		return s_sep.size();
 	}
 
 
 	const char* GetSep(bool endl) const
 	{
 		if (endl) {
-			return kNewlineSep;
+			return s_newline.c_str();
 		}
-		return kSep;
+		return s_sep.c_str();
 	}
 
 };
