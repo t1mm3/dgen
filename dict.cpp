@@ -46,7 +46,24 @@ BufferFactory::FreeBuffer(Buffer* buf)
 }
 
 
-Dictionary::Dictionary(const std::string& file)
+Dictionary::Dictionary()
+{
+}
+
+void
+Dictionary::lookup(char** __restrict__ ptr, size_t* __restrict__ len,
+	size_t* __restrict__ indices, size_t num, int* __restrict__ sel,
+	const Entry* __restrict__ entries, size_t max)
+{
+	VectorExec(sel, num, [&] (auto i) {
+		auto& e = entries[indices[i] % max];
+		ptr[i] = e.str;
+		len[i] = e.len;
+	});
+}
+
+FileDictionary::FileDictionary(const std::string& file)
+ : Dictionary()
 {
 	m_file.open(file);
 	if(m_file.is_open()) {
@@ -59,11 +76,7 @@ Dictionary::Dictionary(const std::string& file)
 				ssize_t len = end - start;
 				assert(len > 0);
 
-				if (m_index.size() == m_index.capacity()) {
-					m_index.reserve(m_index.size() + kIndexAllocAhead);
-				}
-
-				m_index.push_back(Entry { start, (size_t)len});
+				Insert(start, len);
 			};
 
 			char* curr = data;
@@ -85,16 +98,4 @@ Dictionary::Dictionary(const std::string& file)
 	} else {
 		std::cerr << "could not map the file " << file << std::endl;
 	}
-}
-
-void
-Dictionary::lookup(char** __restrict__ ptr, size_t* __restrict__ len,
-	size_t* __restrict__ indices, size_t num, int* __restrict__ sel,
-	const Entry* __restrict__ entries, size_t max)
-{
-	VectorExec(sel, num, [&] (auto i) {
-		auto& e = entries[indices[i] % max];
-		ptr[i] = e.str;
-		len[i] = e.len;
-	});
 }
