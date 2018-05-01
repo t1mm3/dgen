@@ -309,19 +309,14 @@ gen_col(const ColType& ctype, const ColSpec& col, size_t colid, size_t start, si
 
 	ctype.match(
 		[&] (Integer cint) {
-			switch (cint.cgen) {
-				case Random:
-					gen_rand(a, num, start, cint.min, cint.max);
-					break;
-
-				case Sequential:
+			cint.cgen.match(
+				[&] (Sequential gseq) {
 					gen_seq(a, num, start, cint.min, cint.max);
-					break;
-
-				default:
-					assert(false);
-					break;
+				},
+				[&] (Uniform guni) {
+					gen_rand(a, num, start, cint.min, cint.max);
 				}
+			);
 
 			scol.res = a;
 		},

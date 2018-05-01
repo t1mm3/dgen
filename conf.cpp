@@ -59,7 +59,25 @@ parse_integer(pt::ptree& node)
 
 	r.min = node.get<int64_t>("min", 0);
 	r.max = node.get<int64_t>("max");
-	r.cgen = Random;
+	r.cgen = Uniform{};
+
+	size_t matches = 0;
+	for (pt::ptree::value_type &t : node) {
+		if (t.first == "gen") {
+			if (t.second.data() == "uniform" || t.second.data() == "random") {
+				r.cgen = Uniform{};
+				matches++;
+			}
+
+			if (t.second.data() == "sequential") {
+				r.cgen = Sequential {};
+				matches++;
+			}
+			
+		}
+	}
+
+	assert(matches == 1);
 
 	return std::move(r);
 }

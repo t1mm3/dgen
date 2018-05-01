@@ -5,12 +5,17 @@
 #include <stdint.h>
 #include <mapbox/variant.hpp>
 
+using mapbox::util::variant;
+using mapbox::util::recursive_wrapper;
+
 struct Dictionary;
 
-enum ColGenType {
-	Random,
-	Sequential
-};
+struct Sequential {};
+struct Uniform {};
+
+
+using ColGenType = variant<Uniform, Sequential>;
+
 
 struct Integer {
 	ColGenType cgen;
@@ -24,9 +29,6 @@ struct String {
 	std::string fname;
 	Integer index;
 };
-
-using mapbox::util::variant;
-using mapbox::util::recursive_wrapper;
 
 using ColType = variant<recursive_wrapper<String>, Integer>;
 

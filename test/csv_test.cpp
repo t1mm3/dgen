@@ -31,9 +31,9 @@ CsvChecker::CsvChecker(bool str = false)
 	spec.card = card;
 
 	spec.cols = {
-		ColSpec {Integer {Sequential, 0, 101} },
-		ColSpec {Integer {Random, 0, 10013} },
-		ColSpec {Integer {Random, -100, 104200 } }, 
+		ColSpec {Integer {Sequential {}, 0, 101} },
+		ColSpec {Integer {Uniform {}, 0, 10013} },
+		ColSpec {Integer {Uniform {}, -100, 104200 } }, 
 	};
 
 	if (str) {
@@ -41,7 +41,7 @@ CsvChecker::CsvChecker(bool str = false)
 			String {
 				nullptr,
 				(std::string(g_path) + std::string("words1.txt")),
-				Integer {Random, 0, 5 }
+				Integer {Uniform {}, 0, 5 }
 			}
 		});
 	}
