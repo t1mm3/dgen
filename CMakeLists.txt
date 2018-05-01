@@ -19,7 +19,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -O3")
 ## Required software
 find_package(Threads REQUIRED)
 
-find_package(Boost 1.40 COMPONENTS program_options REQUIRED)
+find_package(Boost 1.40 COMPONENTS program_options iostreams REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 
 ## Build information
@@ -32,10 +32,11 @@ configure_file(build.cpp.in ${PROJECT_BINARY_DIR}/build.cpp)
 ## Sources and headers
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(libdgen SHARED outputs.cpp pool.cpp conf.cpp generator.cpp utils.cpp ${PROJECT_BINARY_DIR}/build.cpp)
+add_library(libdgen SHARED outputs.cpp pool.cpp conf.cpp generator.cpp utils.cpp dict.cpp ${PROJECT_BINARY_DIR}/build.cpp)
+target_link_libraries(libdgen ${CMAKE_THREAD_LIBS_INIT} ${Boost_LIBRARIES})
 
 add_executable(dgen gen.cpp)
-target_link_libraries(dgen ${CMAKE_THREAD_LIBS_INIT} ${Boost_LIBRARIES} libdgen)
+target_link_libraries(dgen libdgen)
 
 ## Testing
 enable_testing()
