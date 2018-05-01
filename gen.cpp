@@ -22,9 +22,12 @@ int main(int argc, char* argv[]) {
 		("conf", po::value<std::string>(), "Configuration file")
 	;
 
+	po::positional_options_description p;
+	p.add("conf", 1);
+
 	try {
 		po::variables_map vm;
-		po::store(po::parse_command_line(argc, argv, desc), vm);
+		po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
 		po::notify(vm);
 
 		if (vm.count("help")) {
@@ -33,6 +36,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		if (vm.count("conf")) {
+			assert(vm.count("conf") == 1);
 			auto fname = vm["conf"].as<std::string>();
 
 			parse_config(std::move(fname), spec);
@@ -45,11 +49,6 @@ int main(int argc, char* argv[]) {
         std::cerr << "Exception: " << e.what() << std::endl;
         return 1;
     }
-
-#if 0
-	spec.card = 100;
-	spec.cols = { ColSpec {Integer, Sequential, 0, 100}, ColSpec {Integer, Random, 0, 10000} };
-#endif
 
     CoutOutput cout;
 
