@@ -79,6 +79,35 @@ NO_INLINE size_t sel_true(int* R out, size_t num, bool* pred, int* R sel) {
 #undef KERNEL
 }
 
+#if 0
+NO_INLINE void str_int_rev_round(int64_t* R rev, int64_t* R a, size_t num, bool* R tmp_pred, int* R sel) {
+#define KERNEL(m) \
+	rev[m] = rev[m] * 10 + a[m] % 10; \
+	a[m] /= 10; \
+	tmp_pred[m] = a[m] != 0;
+
+	size_t i;
+	if (sel) {
+		for (i=0; i+8<num; i+=8) {
+			for (int k=0; k<8; k++) {
+				KERNEL(sel[i+k]);
+			}
+		}
+
+		while (i < num) {
+			KERNEL(sel[i]);
+			i++;
+		}
+	} else {
+		for (i=0; i<num; i++) {
+			KERNEL(i);
+		}
+	}	
+
+#undef KERNEL
+}
+#endif
+
 NO_INLINE void str_int_round(char** R s, size_t* R len, int64_t* R a, size_t num, bool* R tmp_pred, int* R sel) {
 #define KERNEL(m) \
 	char* dst = s[m] + len[m]; \
@@ -108,10 +137,11 @@ NO_INLINE void str_int_round(char** R s, size_t* R len, int64_t* R a, size_t num
 #undef KERNEL
 }
 
-NO_INLINE void str_int(char** R s, size_t* R len, int64_t* R a, size_t num, bool* R tmp_pred, int* R tmp_sel, int* R tmp_sel2) {
+NO_INLINE void str_int(char** R s, size_t* R len, int64_t* R a, size_t num, int64_t* R rev, bool* R tmp_pred, int* R tmp_sel, int* R tmp_sel2) {
 	// handle minus
 	for (size_t i=0; i<num; i++) {
 		len[i] = 0;
+		rev[i] = 0;
 		if (a[i] < 0) {
 			*s[i] = '-';
 			a[i] = -a[i];
@@ -119,20 +149,44 @@ NO_INLINE void str_int(char** R s, size_t* R len, int64_t* R a, size_t num, bool
 		}
 	}
 
-	int* sel = nullptr;
-	size_t curr = num;
+#if 0
+	// reverse digits
+	{
+		int* sel = nullptr;
+		size_t curr = num;
 
-	while (curr > 0) {
-		str_int_round(s, len, a, curr, tmp_pred, sel);
+		while (curr > 0) {
+			str_int_rev_round(rev, a, curr, tmp_pred, sel);
 
-		int* newsel = tmp_sel;
+			int* newsel = tmp_sel;
 
-		if (sel == tmp_sel) {
-			newsel = tmp_sel2;
+			if (sel == tmp_sel) {
+				newsel = tmp_sel2;
+			}
+			curr = sel_true(newsel, curr, tmp_pred, sel);
+
+			sel = newsel;
 		}
-		curr = sel_true(newsel, curr, tmp_pred, sel);
+	}
+#endif
 
-		sel = newsel;
+	// divide and modulo
+	{
+		int* sel = nullptr;
+		size_t curr = num;
+
+		while (curr > 0) {
+			str_int_round(s, len, a, curr, tmp_pred, sel);
+
+			int* newsel = tmp_sel;
+
+			if (sel == tmp_sel) {
+				newsel = tmp_sel2;
+			}
+			curr = sel_true(newsel, curr, tmp_pred, sel);
+
+			sel = newsel;
+		}
 	}
 
 	// terminate with \0
@@ -175,6 +229,8 @@ struct VData {
 	bool tmp_pred[g_vector_size];
 	int tmp_sel[g_vector_size];
 	int tmp_sel2[g_vector_size];
+
+	int64_t tmp_vals[g_vector_size];
 
 	size_t pos[g_vector_size];
 
@@ -311,7 +367,7 @@ NO_INLINE void DoTask::append_vector(std::string& out, size_t start, size_t num,
 			std::cerr << "a[87] = " << a[87] << std::endl; 
 
 			fix_ptrs(s, num, max_chars, &buf[0]);
-			str_int(s, &scol.len[0], a, num, &scol.tmp_pred[0], &scol.tmp_sel[0], &scol.tmp_sel2[0]);
+			str_int(s, &scol.len[0], a, num, &scol.tmp_vals[0], &scol.tmp_pred[0], &scol.tmp_sel[0], &scol.tmp_sel2[0]);
 
 			Build::DebugOnly([&] () {
 				for (size_t i=0; i<num; i++) {

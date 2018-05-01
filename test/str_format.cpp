@@ -17,9 +17,10 @@ void check_str_int(int64_t a) {
 
 	{
 		int64_t b = a;
+		int64_t tmp;
 		bool pred;
 		int sel1, sel2;
-		str_int(&str1, &len1, &b, 1, &pred, &sel1, &sel2);
+		str_int(&str1, &len1, &b, 1, &tmp, &pred, &sel1, &sel2);
 	}
 
 	size_t len2 = snprintf(str2, 1024, "%ld", a);
