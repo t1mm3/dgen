@@ -70,14 +70,12 @@ FileDictionary::FileDictionary(const std::string& file)
 	if(m_file.is_open()) {
 		try {
 			size_t size = m_file.size();
-			char *const data = (char*)file.data();
+			char *const data = (char*)m_file.data();
 			char *const end = data + size;
 
 			auto push_word = [&] (char* start, char* end) {
 				ssize_t len = end - start;
 				assert(len > 0);
-
-				std::cerr << start << std::endl;
 
 				Insert(start, len);
 			};

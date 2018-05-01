@@ -17,6 +17,7 @@ BOOST_AUTO_TEST_CASE(dict_mem) {
 		d.Insert((char*)val, strlen(val));
 
 		d.Lookup(&str, &len, &idx, 1, nullptr);
+		BOOST_CHECK(str != nullptr);
 
 		size_t val_len = strlen(val);
 		BOOST_CHECK_EQUAL(len, val_len);
@@ -41,6 +42,7 @@ BOOST_AUTO_TEST_CASE(dict_file1) {
 		size_t len;
 
 		fd.Lookup(&str, &len, &idx, 1, nullptr);
+		BOOST_CHECK(str != nullptr);
 
 		size_t val_len = strlen(val);
 		BOOST_CHECK_EQUAL(len, val_len);
