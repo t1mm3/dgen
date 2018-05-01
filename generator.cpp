@@ -428,6 +428,9 @@ NO_INLINE void generate(RelSpec& spec, Output& out) {
 	}
 
 	auto num_threads = std::min(spec.threads, (spec.card / (g_chunk_size + g_chunk_size - 1)));
+	if (num_threads < 0) {
+		num_threads = 1;
+	}
 
 	ThreadPool<Task, DoTask> g_pool(num_threads);
 
