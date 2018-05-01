@@ -18,7 +18,6 @@ struct CoutOutput : Output {
 #include <functional>
 
 struct CheckOutput : Output {
-	std::mutex lock;
 	std::function<void(std::string&)> check;
 
 	CheckOutput(std::function<void(std::string&)> check);

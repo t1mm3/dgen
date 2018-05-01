@@ -14,31 +14,6 @@
 size_t g_chunk_size = 10000;
 constexpr size_t g_vector_size = 1024;
 
-const char* kSep = "|";
-const size_t kSepLen = 1;
-const char* kNewlineSep = "|\n";
-const size_t kNewlineSepLen = 2;
-
-template<bool endl>
-size_t GetSepLen()
-{
-	if (endl) {
-		return kNewlineSepLen;
-	}
-	return kSepLen;
-}
-
-
-template<bool endl>
-const char* GetSep()
-{
-	if (endl) {
-		return kNewlineSep;
-	}
-	return kSep;
-}
-
-
 #include <random>
 
 #define R __restrict__
@@ -183,7 +158,7 @@ struct VData {
 	int64_t* res;
 };
 
-NO_INLINE size_t calc_positions(size_t pos, size_t num, size_t num_cols, VData* R cols) {
+NO_INLINE size_t calc_positions(size_t pos, size_t num, size_t num_cols, VData* R cols, size_t len_sep, size_t len_nl) {
 	for (size_t i=0; i<num; i++) {
 		for (size_t c = 0; c < num_cols; c++) {
 			bool last_col = c == num_cols-1;
@@ -193,9 +168,9 @@ NO_INLINE size_t calc_positions(size_t pos, size_t num, size_t num_cols, VData* 
 			pos += cols[c].len[i];
 			
 			if (last_col) {
-				pos += GetSepLen<true>();
+				pos += len_nl;
 			} else {
-				pos += GetSepLen<false>();
+				pos += len_sep;
 			}
 		}
 	}
@@ -310,7 +285,7 @@ NO_INLINE void DoTask::append_vector(std::string& out, size_t start, size_t num,
 	}
 
 	// calculate positions
-	size_t size = calc_positions(0, num, num_cols, &state.cols[0]);
+	size_t size = calc_positions(0, num, num_cols, &state.cols[0], rel.GetSepLen(false), rel.GetSepLen(true));
 	out.resize(size+1);
 
 	char* dst = (char*)out.c_str();
@@ -320,8 +295,8 @@ NO_INLINE void DoTask::append_vector(std::string& out, size_t start, size_t num,
 		auto& scol = state.cols[c];
 		const bool last_col = c == num_cols-1;
 
-		const char* sep = last_col ? GetSep<true>() : GetSep<false>();
-		const size_t sep_len = last_col ? GetSepLen<true>() : GetSepLen<false>();
+		const char* sep = rel.GetSep(last_col);
+		const size_t sep_len = rel.GetSepLen(last_col);
 
 		scatter_out(dst, &scol.pos[0], &scol.s[0], &scol.len[0], sep, sep_len, num);
 	}

@@ -25,6 +25,29 @@ struct RelSpec {
 	std::vector<ColSpec> cols;
 	size_t card;
 	size_t threads;
+
+	const char* kSep = "|";
+	size_t kSepLen = 1;
+	const char* kNewlineSep = "|\n";
+	size_t kNewlineSepLen = 2;
+
+	size_t GetSepLen(bool endl) const
+	{
+		if (endl) {
+			return kNewlineSepLen;
+		}
+		return kSepLen;
+	}
+
+
+	const char* GetSep(bool endl) const
+	{
+		if (endl) {
+			return kNewlineSep;
+		}
+		return kSep;
+	}
+
 };
 
 #endif
