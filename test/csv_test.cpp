@@ -92,9 +92,13 @@ BOOST_AUTO_TEST_CASE(csv_ints_backend) {
 
 	for (size_t card = 100; card < 1000000; card *= 10) {
 		csv.card = card;
-		for (int i=1; i<8; i*=2) {
-			csv.threads = i;
-			csv();
-		}
+		auto run = [&] () {
+			for (int i=1; i<8; i*=2) {
+				csv.threads = i;
+				csv();
+			}
+		};
+
+		run();
 	}
 }

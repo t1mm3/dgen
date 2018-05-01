@@ -11,7 +11,7 @@
 
 #include <iostream>
 
-size_t g_chunk_size = 10000;
+size_t g_chunk_size = 16*1024;
 constexpr size_t g_vector_size = 1024;
 
 #include <random>
