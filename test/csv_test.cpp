@@ -85,11 +85,11 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 					BOOST_CHECK(strlen(val.c_str()) == val.size());
 					auto ival = std::stoll(val);
 
-					if (ival < cint.min || ival >= cint.max) {
+					if (ival < cint.min || ival > cint.max) {
 						std::cerr << "ival=" << ival << " from '" << val << "' min=" << cint.min << " max=" << cint.max << std::endl; 
 					}
 					BOOST_CHECK(ival >= cint.min);
-					BOOST_CHECK(ival < cint.max);
+					BOOST_CHECK(ival <= cint.max);
 				},
 				[&] (String unused2) {
 					BOOST_REQUIRE(string);
