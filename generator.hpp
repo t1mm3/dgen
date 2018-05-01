@@ -1,7 +1,8 @@
 #ifndef H_GEN_MAIN
 #define H_GEN_MAIN
 
-#include "spec.hpp"
+struct RelSpec;
+struct Output;
 
-void generate(RelSpec& spec);
+void generate(RelSpec& spec, Output& out);
 #endif

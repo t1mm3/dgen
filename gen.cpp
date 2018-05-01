@@ -6,6 +6,7 @@
 #include "conf.hpp"
 #include "generator.hpp"
 #include "build.hpp"
+#include "outputs.hpp"
 
 int main(int argc, char* argv[]) {
 	std::ios_base::sync_with_stdio(false);
@@ -50,5 +51,7 @@ int main(int argc, char* argv[]) {
 	spec.cols = { ColSpec {Integer, Sequential, 0, 100}, ColSpec {Integer, Random, 0, 10000} };
 #endif
 
-	generate(spec);
+    CoutOutput cout;
+
+	generate(spec, cout);
 }

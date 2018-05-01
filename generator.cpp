@@ -228,6 +228,7 @@ struct Task {
 	size_t end;
 
 	RelSpec* rel;
+	Output* outp;
 };
 
 struct DoTask {
@@ -353,13 +354,10 @@ NO_INLINE void DoTask::operator()(Task&& t) {
 		off += num;
 	}
 
-	{
-		std::lock_guard<std::mutex> lg(lock);
-		std::cout << final;
-	}
+	(*t.outp)(final);
 }
 
-NO_INLINE void generate(RelSpec& spec) {
+NO_INLINE void generate(RelSpec& spec, Output& out) {
 	assert(spec.threads > 0);
 	ThreadPool<Task, DoTask> g_pool(spec.threads);
 
@@ -371,7 +369,7 @@ NO_INLINE void generate(RelSpec& spec) {
 	while (todo > 0) {
 		const size_t num = std::min(g_chunk_size, todo);
 
-		g_pool.Push(Task {offset, offset + num, &spec});
+		g_pool.Push(Task {offset, offset + num, &spec, &out});
 		todo -= num;
 		offset += num;
 	};
