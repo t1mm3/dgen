@@ -3,25 +3,7 @@
 
 #include <string>
 #include <vector>
-
-struct BufferFactory;
-
-struct Buffer {
-	char* data;
-	size_t capacity;
-	size_t size;
-	Buffer* next;
-
-	char* Alloc(size_t bytes);
-private:
-	friend class BufferFactory;
-	Buffer();
-};
-
-struct BufferFactory {
-	Buffer* NewBuffer(size_t capacity);
-	void FreeBuffer(Buffer* buf);
-};
+#include "buffer.hpp"
 
 struct Dictionary {
 protected:
@@ -54,17 +36,19 @@ public:
 		m_index.emplace_back(Entry { str, (size_t)len});
 	}
 
-	void Lookup(char** ptr, size_t* len, size_t* indices, size_t num, int* sel) const {
-		lookup(ptr, len, indices, num, sel, &m_index[0], GetCount());
-	}
+	void Lookup(char** ptr, size_t* len, size_t* indices, size_t num, int* sel) const;
 };
 
 struct InlineDictionary : Dictionary {
 private:
-	std::vector<std::string> strings;
+	const size_t kBufferSize = 16*1024;
+	BufferFactory m_alloc;
+	Buffer* m_head = nullptr;
 
 public:
 	void Put(const std::string& w);
+
+	~InlineDictionary() override;
 };
 
 #include <boost/iostreams/device/mapped_file.hpp>

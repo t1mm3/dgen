@@ -5,48 +5,6 @@
 #include <cassert>
 #include <stdexcept>
 
-Buffer::Buffer()
- : size(0), next(nullptr)
-{
-}
-
-char*
-Buffer::Alloc(size_t bytes)
-{
-	assert(data);
-	if (size + bytes > capacity) {
-		return nullptr;
-	}
-	char* r = data;
-	data += bytes;
-	return r;
-}
-
-
-Buffer*
-BufferFactory::NewBuffer(size_t capacity)
-{
-	char* b = new char[capacity + sizeof(Buffer) + alignof(Buffer)];
-	if (!b) {
-		return nullptr;
-	}
-
-	Buffer* buf = new (b) Buffer();
-
-	buf->capacity = capacity;
-	buf->data = (char*)buf + sizeof(Buffer);
-
-	return buf;
-}
-
-void
-BufferFactory::FreeBuffer(Buffer* buf)
-{
-	char* b = (char*)buf;
-	delete[] b;
-}
-
-
 Dictionary::Dictionary()
 {
 }
@@ -55,6 +13,15 @@ Dictionary::~Dictionary()
 {
 }
 
+
+void
+Dictionary::Lookup(char** ptr, size_t* len, size_t* indices, size_t num, int* sel) const
+{
+	if (!m_index.size()) {
+		throw std::invalid_argument("Dictionary is empty");
+	}
+	lookup(ptr, len, indices, num, sel, &m_index[0], GetCount());
+}
 
 void
 Dictionary::lookup(char** __restrict__ ptr, size_t* __restrict__ len,
@@ -71,10 +38,41 @@ Dictionary::lookup(char** __restrict__ ptr, size_t* __restrict__ len,
 void
 InlineDictionary::Put(const std::string& w)
 {
-	strings.emplace_back(w);
+	const size_t len = w.size();
+	const size_t alloc_len = len + kBufferSize;
 
-	auto& s = strings[strings.size() - 1];
-	Insert((char*)s.c_str(), s.size());
+	char* sptr = nullptr;
+	if (m_head) {
+		sptr = m_head->Alloc(len);
+	}
+
+	// out of memory?
+	if (!sptr) {
+		auto nhead = m_alloc.NewBuffer(std::max(kBufferSize, alloc_len));
+		nhead->next = m_head;
+		m_head = nhead;
+
+		sptr = m_head->Alloc(alloc_len);
+		if (!sptr) {
+			throw std::bad_alloc();
+		}
+	}
+
+	// copy string
+	memcpy(sptr, w.c_str(), len);
+
+	// insert
+	Insert(sptr, len);
+}
+
+InlineDictionary::~InlineDictionary()
+{
+	Buffer* curr = m_head;
+	while (curr) {
+		auto next = curr->next;
+		m_alloc.FreeBuffer(curr);
+		curr = next;
+	}
 }
 
 FileDictionary::FileDictionary(const std::string& file)
