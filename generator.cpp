@@ -555,9 +555,9 @@ DoTask::append_vector(std::string& out, size_t start, size_t num, const RelSpec&
 	}
 }
 
-std::mutex lock;
-
-NO_INLINE void DoTask::operator()(Task&& t) {
+NO_INLINE void
+DoTask::operator()(Task&& t)
+{
 	// generate [start, end) from relation
 	assert(t.rel);
 	assert(t.end <= t.rel->card);
@@ -583,7 +583,9 @@ NO_INLINE void DoTask::operator()(Task&& t) {
 	(*t.outp)(final);
 }
 
-NO_INLINE void generate(RelSpec& spec, Output& out) {
+NO_INLINE void
+generate(RelSpec& spec, Output& out)
+{
 	assert(spec.threads > 0);
 	assert(g_chunk_size > 0);
 	assert(g_vector_size > 0);
