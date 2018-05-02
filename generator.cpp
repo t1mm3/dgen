@@ -420,8 +420,9 @@ NO_INLINE void generate(RelSpec& spec, Output& out) {
 	for (auto& col : spec.cols) {
 		col.ctype.match(
 			[&] (String& cstr) {
-				assert(!cstr.dict);
-				cstr.dict = new FileDictionary(cstr.fname);
+				if (!cstr.dict) {
+					cstr.dict = new FileDictionary(cstr.fname);
+				}
 				objs.emplace_back(std::unique_ptr<Dictionary>(cstr.dict));
 			},
 			[] (Integer cint) {}

@@ -1,5 +1,6 @@
 #include "conf.hpp"
 #include "build.hpp"
+#include "dict.hpp"
 
 #include <iostream>
 #include <thread>
@@ -48,6 +49,31 @@ void check_version(const std::string& str)
 	if (!i) {
 		throw InvalidConf("Configuration requires a version");
 	}
+}
+
+std::string
+unescape(const std::string& s)
+{
+	// from https://stackoverflow.com/questions/5612182/convert-string-with-explicit-escape-sequence-into-relative-character
+	std::string res;
+	std::string::const_iterator it = s.begin();
+	while (it != s.end()) {
+		char c = *it++;
+		if (c == '\\' && it != s.end()) {
+			switch (*it++) {
+				case '\\': c = '\\'; break;
+				case 'n': c = '\n'; break;
+				case 't': c = '\t'; break;
+				// all other escapes
+				default: 
+					// invalid escape sequence - skip it. alternatively you can copy it as is, throw an exception...
+					continue;
+			}
+		}
+		res += c;
+	}
+
+	return res;
 }
 
 namespace pt = boost::property_tree;
@@ -125,8 +151,24 @@ parse_string(pt::ptree& node)
 
 	assert(matches == 1);
 
-	r.fname = node.get<std::string>("file");
 	r.dict = nullptr;
+	r.fname = "";
+
+	for (pt::ptree::value_type &t : node) {
+		if (t.first == "file") {
+			r.fname = t.second.data();
+			matches++;
+		}
+		if (t.first == "in") {
+			auto in = new InlineDictionary();
+			r.dict = in;
+			for (pt::ptree::value_type &w : t.second) {
+				in->Put(unescape(w.second.data()));
+				// std::cerr << "word" << unescape(w.second.data()) << std::endl;
+			}
+			matches++;
+		}
+	}
 
 	return r;
 }
@@ -153,31 +195,6 @@ parse_column(pt::ptree& node)
 
 	assert(matches == 1);
 	return r;
-}
-
-std::string
-unescape(const std::string& s)
-{
-	// from https://stackoverflow.com/questions/5612182/convert-string-with-explicit-escape-sequence-into-relative-character
-	std::string res;
-	std::string::const_iterator it = s.begin();
-	while (it != s.end()) {
-		char c = *it++;
-		if (c == '\\' && it != s.end()) {
-			switch (*it++) {
-				case '\\': c = '\\'; break;
-				case 'n': c = '\n'; break;
-				case 't': c = '\t'; break;
-				// all other escapes
-				default: 
-					// invalid escape sequence - skip it. alternatively you can copy it as is, throw an exception...
-					continue;
-			}
-		}
-		res += c;
-	}
-
-	return res;
 }
 
 void

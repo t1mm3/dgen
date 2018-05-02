@@ -68,6 +68,15 @@ Dictionary::lookup(char** __restrict__ ptr, size_t* __restrict__ len,
 	});
 }
 
+void
+InlineDictionary::Put(const std::string& w)
+{
+	strings.emplace_back(w);
+
+	auto& s = strings[strings.size() - 1];
+	Insert((char*)s.c_str(), s.size());
+}
+
 FileDictionary::FileDictionary(const std::string& file)
  : Dictionary()
 {

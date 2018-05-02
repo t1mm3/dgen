@@ -59,6 +59,14 @@ public:
 	}
 };
 
+struct InlineDictionary : Dictionary {
+private:
+	std::vector<std::string> strings;
+
+public:
+	void Put(const std::string& w);
+};
+
 #include <boost/iostreams/device/mapped_file.hpp>
 
 struct FileDictionary : Dictionary {
