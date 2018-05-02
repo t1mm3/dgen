@@ -150,7 +150,6 @@ NO_INLINE void str_int(char** R s, size_t* R len, int64_t* R a, size_t num, int6
 	}
 
 	rounddown_log10((uint64_t*)log10, (uint64_t*)a, num, tmp_sel);
-	// vec_log10_64(log10, (uint64_t*)a, num, tmp_sel, true);
 
 	// divide and modulo
 	{
@@ -196,6 +195,8 @@ NO_INLINE void scatter_out(char* R dest, size_t* R pos, char** R strs, size_t* R
 	case 0: 	KERNEL(0); break;
 	case 1: 	KERNEL(1); break;
 	case 2: 	KERNEL(2); break;
+	case 3: 	KERNEL(3); break;
+	case 4: 	KERNEL(4); break;
 	default: 	KERNEL(sep_len); break;
 	}
 
