@@ -35,7 +35,9 @@ configure_file(build.cpp.in ${PROJECT_BINARY_DIR}/build.cpp)
 ## Sources and headers
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(libdgen STATIC outputs.cpp pool.cpp conf.cpp generator.cpp utils.cpp dict.cpp buffer.cpp ${PROJECT_BINARY_DIR}/build.cpp)
+add_library(libdgen STATIC outputs.cpp pool.cpp conf.cpp generator.cpp utils.cpp buffer.cpp
+	dict.cpp dict_impl1.cpp dict_impl2.cpp dict_impl3.cpp dict_impl4.cpp dict_impl5.cpp dict_impl6.cpp dict_impl7.cpp
+	${PROJECT_BINARY_DIR}/build.cpp)
 target_link_libraries(libdgen ${CMAKE_THREAD_LIBS_INIT} ${Boost_LIBRARIES})
 
 add_executable(dgen gen.cpp)
