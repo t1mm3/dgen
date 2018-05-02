@@ -12,4 +12,6 @@ void generate(RelSpec& spec, Output& out);
 extern size_t g_chunk_size;
 
 extern void str_int(char** s, size_t* len, int64_t* a, size_t num, int64_t* log10, bool* tmp_pred, int* tmp_sel, int* tmp_sel2);
+extern void rounddown_log10(uint64_t* res, uint64_t* x, size_t num, int* sel);
+
 #endif

@@ -7,7 +7,6 @@
 void vec_log2_64(int* res, uint64_t* x, size_t num);
 void vec_log2_32(int* res, uint32_t* x, size_t num);
 void vec_log10_64(int* res, uint64_t* x, size_t num, int* sel, bool no0);
-void rounddown_log10(uint64_t* res, uint64_t* x, size_t num, int* sel);
 
 template<typename F>
 void VectorExec(int* sel, size_t num, F&& fun, bool strict = true)

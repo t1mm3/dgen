@@ -27,9 +27,6 @@ BOOST_AUTO_TEST_CASE(rd_log10) {
 	check(9999, 1000);
 }
 
-
-extern void str_int(char** s, size_t* len, int64_t* a, size_t num, bool* tmp_pred, int* tmp_sel, int* tmp_sel2);
-
 void check_str_int(int64_t a) {
 	char buf1[1024];
 	char buf2[1024];

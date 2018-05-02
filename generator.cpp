@@ -147,7 +147,8 @@ NO_INLINE void fix_ptrs(char** R res, size_t num, size_t max_chars, char* R base
 	}
 }
 
-NO_INLINE size_t sel_gt0(int* R out, size_t num, int64_t* pred, int* R sel) {
+template<typename T>
+NO_INLINE size_t sel_gt0(int* R out, size_t num, T* R pred, int* R sel) {
 	size_t res = 0;
 	VectorExec(sel, num, [&] (auto m) {
 		out[res] = m;
@@ -156,8 +157,8 @@ NO_INLINE size_t sel_gt0(int* R out, size_t num, int64_t* pred, int* R sel) {
 	return res;
 }
 
-
-NO_INLINE size_t sel_not0(int* R out, size_t num, int64_t* pred, int* R sel) {
+template<typename T>
+NO_INLINE size_t sel_not0(int* R out, size_t num, T* R pred, int* R sel) {
 	size_t res = 0;
 	VectorExec(sel, num, [&] (auto m) {
 		out[res] = m;
@@ -192,18 +193,97 @@ NO_INLINE size_t sel_false(int* R out, size_t num, bool* pred, int* R sel) {
 	return res;
 }
 
-NO_INLINE void str_int_round(char** R s, size_t* R len, int64_t* R a, int64_t* R div, size_t num, int* R sel) {
-	VectorExec(sel, num, [&] (auto m) {
-		char* R dst = s[m] + len[m];
-		*dst = '0' + (a[m] / div[m]);
-		len[m]++;
+// inspired by http://coliru.stacked-crooked.com/a/16f8a901a31b9d73
+	static constexpr uint64_t powers[]= {
+		uint64_t(1u),
+		uint64_t(10u),
+		uint64_t(100u),
+		uint64_t(1000u),
+		uint64_t(10000u),
+		uint64_t(100000u),
+		uint64_t(1000000u),
+		uint64_t(10000000u),
+		uint64_t(100000000u),
+		uint64_t(1000000000u),
+		uint64_t(10000000000u),
+		uint64_t(100000000000u),
+		uint64_t(1000000000000u),
+		uint64_t(10000000000000u),
+		uint64_t(100000000000000u),
+		uint64_t(1000000000000000u),
+		uint64_t(10000000000000000u),
+		uint64_t(100000000000000000u),
+		uint64_t(1000000000000000000u),
+		uint64_t(10000000000000000000u),
+	};
 
-		a[m] %= div[m];
-		div[m] /= 10;
+	static constexpr unsigned guess[65]= {
+		0 ,0 ,0 ,0 , 1 ,1 ,1 , 2 ,2 ,2 ,
+		3 ,3 ,3 ,3 , 4 ,4 ,4 , 5 ,5 ,5 ,
+		6 ,6 ,6 ,6 , 7 ,7 ,7 , 8 ,8 ,8 ,
+		9 ,9 ,9 ,9 , 10,10,10, 11,11,11,
+		12,12,12,12, 13,13,13, 14,14,14,
+		15,15,15,15, 16,16,16, 17,17,17,
+		18,18,18,18, 19
+	};
+
+template<typename T>
+NO_INLINE void
+trounddown_log10(T* R res, uint64_t* R x, size_t num, int* R sel)
+{
+
+	VectorExec(sel, num, [&] (auto i) {
+#if 0
+#if 0
+		res[i] = 1;
+		while ((res[i]*10) <= x[i]) {
+			res[i] *= 10;
+		}
+#else
+		const auto val = x[i];
+		static constexpr size_t powers_size = sizeof(powers) / sizeof(powers[0]);
+		for (size_t k=0; k<powers_size; k++) {
+			if (val >= powers[k]) {
+				res[i] = powers[k];
+			}
+		}
+#endif
+#else
+	auto digits=guess[64 - __builtin_clzll(x[i])];
+	// std::cerr << "x=" << x[i] << " leading=" << __builtin_clzll(x[i]) << " guess[64-lead]=" << digits << " powers[guess]=" << powers[digits]<< std::endl;
+	if ((x[i] < powers[digits]) & (digits > 0)) {
+		digits--;
+	}
+
+	res[i] = powers[digits];
+#endif
 	});
 }
 
-NO_INLINE void str_int(char** R s, size_t* R len, int64_t* R a, size_t num, int64_t* R log10, bool* R tmp_pred, int* R tmp_sel, int* R tmp_sel2) {
+NO_INLINE void
+rounddown_log10(uint64_t* R res, uint64_t* R x, size_t num, int* R sel)
+{
+	trounddown_log10<uint64_t>(res, x, num, sel);
+}
+
+template<typename T>
+NO_INLINE void str_int_round(char** R s, size_t* R len, int64_t* R a, T* R div, size_t num, int* R sel) {
+	VectorExec(sel, num, [&] (auto m) {
+		const T dv = (T)div[m];
+		T av = (T)a[m];
+
+		char* R dst = s[m] + len[m];
+		*dst = '0' + (av / dv);
+		len[m]++;
+
+
+		a[m] = static_cast<T>(av % dv);
+		div[m] = static_cast<T>(dv / 10);
+	});
+}
+
+template<typename T>
+NO_INLINE void tstr_int(char** R s, size_t* R len, int64_t* R a, size_t num, T* R log10, bool* R tmp_pred, int* R tmp_sel, int* R tmp_sel2) {
 	// handle 0 and forget about them
 	{
 		size_t curr = sel_0(tmp_sel, num, a, nullptr);
@@ -229,7 +309,7 @@ NO_INLINE void str_int(char** R s, size_t* R len, int64_t* R a, size_t num, int6
 		});
 	}
 
-	rounddown_log10((uint64_t*)log10, (uint64_t*)a, num, tmp_sel);
+	trounddown_log10<T>(log10, (uint64_t*)a, num, tmp_sel);
 
 	// divide and modulo
 	{
@@ -237,16 +317,14 @@ NO_INLINE void str_int(char** R s, size_t* R len, int64_t* R a, size_t num, int6
 		size_t curr = num;
 
 		while (curr > 0) {
-			str_int_round(s, len, a, log10, curr, sel);
+			str_int_round<T>(s, len, a, log10, curr, sel);
 
 			int* newsel = tmp_sel;
 			if (sel == tmp_sel) {
 				newsel = tmp_sel2;
 			}
-			curr = sel_gt0(newsel, curr, log10, sel);
-			sel = newsel;
-
-			
+			curr = sel_gt0<T>(newsel, curr, log10, sel);
+			sel = newsel;			
 		}
 	}
 
@@ -255,6 +333,12 @@ NO_INLINE void str_int(char** R s, size_t* R len, int64_t* R a, size_t num, int6
 		char* dst = s[i] + len[i];
 		*dst = '\0';
 	}
+}
+
+void
+str_int(char** s, size_t* len, int64_t* a, size_t num, int64_t* R log10, bool* tmp_pred, int* tmp_sel, int* tmp_sel2)
+{
+	tstr_int<int64_t>(s, len, a, num, log10, tmp_pred, tmp_sel, tmp_sel2);
 }
 
 NO_INLINE void scatter_out(char* R dest, size_t* R pos, char** R strs, size_t* R lens, const char* R sep, size_t sep_len, size_t num) {
@@ -378,8 +462,26 @@ to_str(const ColSpec& col, size_t colid, size_t num)
 			}
 
 			fix_ptrs(s, num, max_chars, &buf[0]);
-			str_int(s, &scol.len[0], a, num, &scol.tmp_vals[0], &scol.tmp_pred[0],
-				&scol.tmp_sel[0], &scol.tmp_sel2[0]);
+
+			switch (GetFittingType(cint.min, cint.max)) {
+#define A(C, B) case B: tstr_int<C>(s, &scol.len[0], a, num, \
+							(C*)&scol.tmp_vals[0], &scol.tmp_pred[0], \
+							&scol.tmp_sel[0], &scol.tmp_sel2[0]); \
+							break;
+				A(int8_t, I8);
+				A(uint8_t, U8);
+
+				A(int16_t, I16);
+				A(uint16_t, U16);
+
+				A(int32_t, I32);
+				A(uint32_t, U32);
+
+				A(int64_t, I64);
+#undef A
+				default:
+					assert(false);
+			}
 		},
 		[] (String cstr) {
 			// already a string
