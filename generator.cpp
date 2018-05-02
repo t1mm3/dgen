@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <iostream>
+#include <limits>
 
 size_t g_chunk_size = 16*1024;
 constexpr size_t g_vector_size = 1024;
@@ -21,6 +22,43 @@ constexpr size_t g_vector_size = 1024;
 #include <random>
 
 #define R __restrict__
+
+enum BaseType {
+	I8,
+	U8,
+	I16,
+	U16,
+	I32,
+	U32,
+	I64	
+};
+
+inline static BaseType
+GetFittingType(int64_t min, int64_t max)
+{
+#define A(C, B) \
+		if ((int64_t)std::numeric_limits<C>::max() >= max && \
+			(int64_t)std::numeric_limits<C>::min() <= min) { \
+				return B; \
+		}
+
+	A(int8_t, I8);
+	A(uint8_t, U8);
+
+	A(int16_t, I16);
+	A(uint16_t, U16);
+
+	A(int32_t, I32);
+	A(uint32_t, U32);
+
+	A(int64_t, I64);
+
+#undef A
+
+	assert(false);
+	return I64;
+}
+
 
 NO_INLINE void gen_assert(int64_t* R a, size_t num, int64_t min, int64_t max)
 {
@@ -30,16 +68,38 @@ NO_INLINE void gen_assert(int64_t* R a, size_t num, int64_t min, int64_t max)
 	}
 }
 
-NO_INLINE void gen_uni(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max) {
+template<typename T>
+NO_INLINE void tgen_uni(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max) {
 	std::mt19937 rng(seed);
-	std::uniform_int_distribution<int64_t> uni(min,max);
+	std::uniform_int_distribution<T> uni(min,max);
 
 	for (size_t i=0; i<num; i++) {
 		res[i] = uni(rng);
 	}
 }
 
-NO_INLINE void gen_poisson(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max, double mean) {
+NO_INLINE void gen_uni(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max) {
+	switch (GetFittingType(min, max)) {
+#define A(C, B) case B: tgen_uni<C>(res, num, seed, min, max); break;
+	A(int8_t, I8);
+	A(uint8_t, U8);
+
+	A(int16_t, I16);
+	A(uint16_t, U16);
+
+	A(int32_t, I32);
+	A(uint32_t, U32);
+
+	A(int64_t, I64);
+
+#undef A
+	default:
+		assert(false);
+	}
+}
+
+template<typename T>
+NO_INLINE void tgen_poisson(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max, double mean) {
 	std::mt19937 rng(seed);
 	std::poisson_distribution<int64_t> uni(mean);
 	int64_t dom = max - min;
@@ -47,6 +107,26 @@ NO_INLINE void gen_poisson(int64_t* R res, size_t num, int64_t seed, int64_t min
 	for (size_t i=0; i<num; i++) {
 		auto k = uni(rng);
 		res[i] = (k % dom) + min;
+	}
+}
+
+NO_INLINE void gen_poisson(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max, double mean) {
+	switch (GetFittingType(min, max)) {
+#define A(C, B) case B: tgen_poisson<C>(res, num, seed, min, max, mean); break;
+	A(int8_t, I8);
+	A(uint8_t, U8);
+
+	A(int16_t, I16);
+	A(uint16_t, U16);
+
+	A(int32_t, I32);
+	A(uint32_t, U32);
+
+	A(int64_t, I64);
+
+#undef A
+	default:
+		assert(false);
 	}
 }
 
