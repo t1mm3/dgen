@@ -22,12 +22,6 @@ constexpr size_t g_vector_size = 1024;
 
 #define R __restrict__
 
-#ifdef __GNUC__
-#define NO_INLINE __attribute__ ((noinline))
-#else
-#define NO_INLINE
-#endif
-
 NO_INLINE void gen_assert(int64_t* R a, size_t num, int64_t min, int64_t max)
 {
 	for (size_t i=0; i<num; i++) {

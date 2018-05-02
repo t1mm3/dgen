@@ -14,6 +14,7 @@ configure_file(json_conf1.txt ${TEST_PATH}/json_conf1.txt)
 configure_file(json_conf2.txt ${TEST_PATH}/json_conf2.txt)
 configure_file(json_conf3.txt ${TEST_PATH}/json_conf3.txt)
 
+configure_file(bench_conf1.txt ${TEST_PATH}/bench_conf1.txt)
 
 add_executable(str str_format.cpp)
 target_link_libraries(str libdgen libtestdgen ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})

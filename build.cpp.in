@@ -4,3 +4,4 @@ int Build::GetVersionMajor() { return @PROJECT_VERSION_MAJOR@; }
 int Build::GetVersionMinor() { return @PROJECT_VERSION_MINOR@; }
 const char* Build::GetVersionStr() { return "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@"; }
 const char* Build::GetGitCommit() { return "@GIT_SHA1@"; }
+const char* Build::GetTypeStr() { return "@CMAKE_BUILD_TYPE@"; }

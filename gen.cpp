@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
 	std::ios_base::sync_with_stdio(false);
 	RelSpec spec;
 
-	std::cerr << "dgen " << Build::GetVersionStr() << std::endl;
+	std::cerr << "dgen " << Build::GetVersionStr() << " " << Build::GetTypeStr() << std::endl;
 
 	namespace po = boost::program_options;
 	// Declare the supported options.

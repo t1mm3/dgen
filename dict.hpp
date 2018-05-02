@@ -6,12 +6,12 @@
 #include "buffer.hpp"
 
 struct Dictionary {
-protected:
+public:
 	struct Entry {
 		char* str;
 		size_t len;
 	};
-
+protected:
 	std::vector<Entry> m_index;
 
 	const size_t kIndexAllocAhead = 1024*1024;
@@ -36,7 +36,9 @@ public:
 		m_index.emplace_back(Entry { str, (size_t)len});
 	}
 
-	void Lookup(char** ptr, size_t* len, size_t* indices, size_t num, int* sel) const;
+	void Lookup(char** ptr, size_t* len, size_t* indices, size_t num, int* sel) const {
+		lookup(ptr, len, indices, num, sel, &m_index[0], GetCount());
+	}
 };
 
 struct InlineDictionary : Dictionary {
