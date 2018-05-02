@@ -225,7 +225,9 @@ struct VData {
 	int64_t* res;
 };
 
-NO_INLINE size_t calc_positions(size_t pos, size_t num, size_t num_cols, VData* R cols, size_t len_sep, size_t len_nl) {
+NO_INLINE size_t calc_positions(size_t pos, size_t num, size_t num_cols,
+	VData* R cols, size_t len_sep, size_t len_nl)
+{
 	for (size_t i=0; i<num; i++) {
 		for (size_t c = 0; c < num_cols; c++) {
 			bool last_col = c == num_cols-1;
@@ -301,7 +303,8 @@ to_str(const ColSpec& col, size_t colid, size_t num)
 			}
 
 			fix_ptrs(s, num, max_chars, &buf[0]);
-			str_int(s, &scol.len[0], a, num, &scol.tmp_vals[0], &scol.tmp_pred[0], &scol.tmp_sel[0], &scol.tmp_sel2[0]);
+			str_int(s, &scol.len[0], a, num, &scol.tmp_vals[0], &scol.tmp_pred[0],
+				&scol.tmp_sel[0], &scol.tmp_sel2[0]);
 		},
 		[] (String cstr) {
 			// already a string
@@ -310,7 +313,8 @@ to_str(const ColSpec& col, size_t colid, size_t num)
 }
 
 static void
-gen_col(const ColType& ctype, const ColSpec& col, size_t colid, size_t start, size_t num, bool top_level)
+gen_col(const ColType& ctype, const ColSpec& col, size_t colid, size_t start,
+	size_t num, bool top_level)
 {
 	auto& scol = state.cols[colid];
 	int64_t* a = &scol.a[0];
@@ -350,7 +354,8 @@ gen_col(const ColType& ctype, const ColSpec& col, size_t colid, size_t start, si
 }
 
 
-NO_INLINE void DoTask::append_vector(std::string& out, size_t start, size_t num, const RelSpec& rel)
+NO_INLINE void
+DoTask::append_vector(std::string& out, size_t start, size_t num, const RelSpec& rel)
 {
 	size_t num_cols = rel.cols.size();
 	if (state.cols.size() < num_cols) {
@@ -364,7 +369,8 @@ NO_INLINE void DoTask::append_vector(std::string& out, size_t start, size_t num,
 	}
 
 	// calculate positions
-	size_t size = calc_positions(0, num, num_cols, &state.cols[0], rel.GetSepLen(false), rel.GetSepLen(true));
+	size_t size = calc_positions(0, num, num_cols, &state.cols[0],
+		rel.GetSepLen(false), rel.GetSepLen(true));
 	out.resize(size);
 
 	char* dst = (char*)out.c_str();
