@@ -3,10 +3,49 @@
 
 #include <stdint.h>
 #include <string>
+#include <limits>
+#include <cassert>
 
 void vec_log2_64(int* res, uint64_t* x, size_t num);
 void vec_log2_32(int* res, uint32_t* x, size_t num);
 void vec_log10_64(int* res, uint64_t* x, size_t num, int* sel, bool no0);
+
+
+enum BaseType {
+	I8,
+	U8,
+	I16,
+	U16,
+	I32,
+	U32,
+	I64	
+};
+
+inline static BaseType
+GetFittingType(int64_t min, int64_t max)
+{
+#define A(C, B) \
+		if ((int64_t)std::numeric_limits<C>::max() >= max && \
+			(int64_t)std::numeric_limits<C>::min() <= min) { \
+				return B; \
+		}
+
+	A(int8_t, I8);
+	A(uint8_t, U8);
+
+	A(int16_t, I16);
+	A(uint16_t, U16);
+
+	A(int32_t, I32);
+	A(uint32_t, U32);
+
+	A(int64_t, I64);
+
+#undef A
+
+	assert(false);
+	return I64;
+}
 
 template<typename F>
 void VectorExec(int* sel, size_t num, F&& fun, bool strict = true)

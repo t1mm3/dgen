@@ -14,7 +14,6 @@
 
 #include <memory>
 #include <iostream>
-#include <limits>
 
 size_t g_chunk_size = 16*1024;
 constexpr size_t g_vector_size = 1024;
@@ -23,53 +22,8 @@ constexpr size_t g_vector_size = 1024;
 
 #define R __restrict__
 
-enum BaseType {
-	I8,
-	U8,
-	I16,
-	U16,
-	I32,
-	U32,
-	I64	
-};
-
-inline static BaseType
-GetFittingType(int64_t min, int64_t max)
-{
-#define A(C, B) \
-		if ((int64_t)std::numeric_limits<C>::max() >= max && \
-			(int64_t)std::numeric_limits<C>::min() <= min) { \
-				return B; \
-		}
-
-	A(int8_t, I8);
-	A(uint8_t, U8);
-
-	A(int16_t, I16);
-	A(uint16_t, U16);
-
-	A(int32_t, I32);
-	A(uint32_t, U32);
-
-	A(int64_t, I64);
-
-#undef A
-
-	assert(false);
-	return I64;
-}
-
-
-NO_INLINE void gen_assert(int64_t* R a, size_t num, int64_t min, int64_t max)
-{
-	for (size_t i=0; i<num; i++) {
-		assert(a[i] >= min);
-		assert(a[i] < max);
-	}
-}
-
 template<typename T>
-NO_INLINE void tgen_uni(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max) {
+NO_INLINE void tgen_uni(T* R res, size_t num, int64_t seed, int64_t min, int64_t max) {
 	std::mt19937 rng(seed);
 	std::uniform_int_distribution<T> uni(min,max);
 
@@ -78,9 +32,9 @@ NO_INLINE void tgen_uni(int64_t* R res, size_t num, int64_t seed, int64_t min, i
 	}
 }
 
-NO_INLINE void gen_uni(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max) {
-	switch (GetFittingType(min, max)) {
-#define A(C, B) case B: tgen_uni<C>(res, num, seed, min, max); break;
+NO_INLINE void gen_uni(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max, BaseType t) {
+	switch (t) {
+#define A(C, B) case B: tgen_uni<C>((C*)res, num, seed, min, max); break;
 	A(int8_t, I8);
 	A(uint8_t, U8);
 
@@ -99,9 +53,9 @@ NO_INLINE void gen_uni(int64_t* R res, size_t num, int64_t seed, int64_t min, in
 }
 
 template<typename T>
-NO_INLINE void tgen_poisson(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max, double mean) {
+NO_INLINE void tgen_poisson(T* R res, size_t num, int64_t seed, int64_t min, int64_t max, double mean) {
 	std::mt19937 rng(seed);
-	std::poisson_distribution<int64_t> uni(mean);
+	std::poisson_distribution<T> uni(mean);
 	int64_t dom = max - min;
 
 	for (size_t i=0; i<num; i++) {
@@ -110,9 +64,9 @@ NO_INLINE void tgen_poisson(int64_t* R res, size_t num, int64_t seed, int64_t mi
 	}
 }
 
-NO_INLINE void gen_poisson(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max, double mean) {
-	switch (GetFittingType(min, max)) {
-#define A(C, B) case B: tgen_poisson<C>(res, num, seed, min, max, mean); break;
+NO_INLINE void gen_poisson(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max, double mean, BaseType t) {
+	switch (t) {
+#define A(C, B) case B: tgen_poisson<C>((C*)res, num, seed, min, max, mean); break;
 	A(int8_t, I8);
 	A(uint8_t, U8);
 
@@ -130,25 +84,52 @@ NO_INLINE void gen_poisson(int64_t* R res, size_t num, int64_t seed, int64_t min
 	}
 }
 
-
-NO_INLINE void gen_seq(int64_t* R res, size_t num, int64_t start, int64_t min, int64_t max) {
+template<typename T>
+NO_INLINE void
+tgen_seq(T* R res, size_t num, int64_t start, int64_t min, int64_t max) {
 	assert(max >= min);
-	int64_t dom = max - min;
+	T dom = max - min;
 
 	for (size_t i=0; i<num; i++) {
-		int64_t k = start + i;
+		T k = start + i;
 		res[i] = (k % dom) + min;
 	}
 }
 
-NO_INLINE void fix_ptrs(char** R res, size_t num, size_t max_chars, char* R base) {
+
+NO_INLINE void gen_seq(int64_t* R res, size_t num, int64_t start, int64_t min, int64_t max, BaseType t) {
+	switch (t) {
+#define A(C, B) case B: tgen_seq<C>((C*)res, num, start, min, max); break;
+	A(int8_t, I8);
+	A(uint8_t, U8);
+
+	A(int16_t, I16);
+	A(uint16_t, U16);
+
+	A(int32_t, I32);
+	A(uint32_t, U32);
+
+	A(int64_t, I64);
+
+#undef A
+	default:
+		assert(false);
+	}
+
+}
+
+NO_INLINE void
+fix_ptrs(char** R res, size_t num, size_t max_chars, char* R base)
+{
 	for (size_t i=0; i<num; i++) {
 		res[i] = base + i*max_chars;
 	}
 }
 
 template<typename T>
-NO_INLINE size_t sel_gt0(int* R out, size_t num, T* R pred, int* R sel) {
+NO_INLINE size_t
+sel_gt0(int* R out, size_t num, T* R pred, int* R sel)
+{
 	size_t res = 0;
 	VectorExec(sel, num, [&] (auto m) {
 		out[res] = m;
@@ -158,24 +139,9 @@ NO_INLINE size_t sel_gt0(int* R out, size_t num, T* R pred, int* R sel) {
 }
 
 template<typename T>
-NO_INLINE size_t sel_not0(int* R out, size_t num, T* R pred, int* R sel) {
-	size_t res = 0;
-	VectorExec(sel, num, [&] (auto m) {
-		out[res] = m;
-		res += !!pred[m];
-	});
-	return res;
-}
-NO_INLINE size_t sel_0(int* R out, size_t num, int64_t* pred, int* R sel) {
-	size_t res = 0;
-	VectorExec(sel, num, [&] (auto m) {
-		out[res] = m;
-		res += !pred[m];
-	});
-	return res;
-}
-
-NO_INLINE size_t sel_true(int* R out, size_t num, bool* pred, int* R sel) {
+NO_INLINE size_t
+sel_not0(int* R out, size_t num, T* R pred, int* R sel)
+{
 	size_t res = 0;
 	VectorExec(sel, num, [&] (auto m) {
 		out[res] = m;
@@ -184,7 +150,10 @@ NO_INLINE size_t sel_true(int* R out, size_t num, bool* pred, int* R sel) {
 	return res;
 }
 
-NO_INLINE size_t sel_false(int* R out, size_t num, bool* pred, int* R sel) {
+template<typename T>
+NO_INLINE size_t
+sel_0(int* R out, size_t num, T* R pred, int* R sel)
+{
 	size_t res = 0;
 	VectorExec(sel, num, [&] (auto m) {
 		out[res] = m;
@@ -192,44 +161,46 @@ NO_INLINE size_t sel_false(int* R out, size_t num, bool* pred, int* R sel) {
 	});
 	return res;
 }
+
 
 // inspired by http://coliru.stacked-crooked.com/a/16f8a901a31b9d73
-	static constexpr uint64_t powers[]= {
-		uint64_t(1u),
-		uint64_t(10u),
-		uint64_t(100u),
-		uint64_t(1000u),
-		uint64_t(10000u),
-		uint64_t(100000u),
-		uint64_t(1000000u),
-		uint64_t(10000000u),
-		uint64_t(100000000u),
-		uint64_t(1000000000u),
-		uint64_t(10000000000u),
-		uint64_t(100000000000u),
-		uint64_t(1000000000000u),
-		uint64_t(10000000000000u),
-		uint64_t(100000000000000u),
-		uint64_t(1000000000000000u),
-		uint64_t(10000000000000000u),
-		uint64_t(100000000000000000u),
-		uint64_t(1000000000000000000u),
-		uint64_t(10000000000000000000u),
-	};
+static constexpr uint64_t powers[]= {
+	uint64_t(1u),
+	uint64_t(10u),
+	uint64_t(100u),
+	uint64_t(1000u),
+	uint64_t(10000u),
+	uint64_t(100000u),
+	uint64_t(1000000u),
+	uint64_t(10000000u),
+	uint64_t(100000000u),
+	uint64_t(1000000000u),
+	uint64_t(10000000000u),
+	uint64_t(100000000000u),
+	uint64_t(1000000000000u),
+	uint64_t(10000000000000u),
+	uint64_t(100000000000000u),
+	uint64_t(1000000000000000u),
+	uint64_t(10000000000000000u),
+	uint64_t(100000000000000000u),
+	uint64_t(1000000000000000000u),
+	uint64_t(10000000000000000000u),
+};
 
-	static constexpr unsigned guess[65]= {
-		0 ,0 ,0 ,0 , 1 ,1 ,1 , 2 ,2 ,2 ,
-		3 ,3 ,3 ,3 , 4 ,4 ,4 , 5 ,5 ,5 ,
-		6 ,6 ,6 ,6 , 7 ,7 ,7 , 8 ,8 ,8 ,
-		9 ,9 ,9 ,9 , 10,10,10, 11,11,11,
-		12,12,12,12, 13,13,13, 14,14,14,
-		15,15,15,15, 16,16,16, 17,17,17,
-		18,18,18,18, 19
-	};
+// inspired by http://coliru.stacked-crooked.com/a/16f8a901a31b9d73
+static constexpr unsigned guess[65]= {
+	0 ,0 ,0 ,0 , 1 ,1 ,1 , 2 ,2 ,2 ,
+	3 ,3 ,3 ,3 , 4 ,4 ,4 , 5 ,5 ,5 ,
+	6 ,6 ,6 ,6 , 7 ,7 ,7 , 8 ,8 ,8 ,
+	9 ,9 ,9 ,9 , 10,10,10, 11,11,11,
+	12,12,12,12, 13,13,13, 14,14,14,
+	15,15,15,15, 16,16,16, 17,17,17,
+	18,18,18,18, 19
+};
 
 template<typename T>
 NO_INLINE void
-trounddown_log10(T* R res, uint64_t* R x, size_t num, int* R sel)
+trounddown_log10(T* R res, T* R x, size_t num, int* R sel)
 {
 
 	VectorExec(sel, num, [&] (auto i) {
@@ -251,7 +222,7 @@ trounddown_log10(T* R res, uint64_t* R x, size_t num, int* R sel)
 #else
 	auto digits=guess[64 - __builtin_clzll(x[i])];
 	// std::cerr << "x=" << x[i] << " leading=" << __builtin_clzll(x[i]) << " guess[64-lead]=" << digits << " powers[guess]=" << powers[digits]<< std::endl;
-	if ((x[i] < powers[digits]) & (digits > 0)) {
+	if (((uint64_t)x[i] < powers[digits]) & (digits > 0)) {
 		digits--;
 	}
 
@@ -267,7 +238,7 @@ rounddown_log10(uint64_t* R res, uint64_t* R x, size_t num, int* R sel)
 }
 
 template<typename T>
-NO_INLINE void str_int_round(char** R s, size_t* R len, int64_t* R a, T* R div, size_t num, int* R sel) {
+NO_INLINE void str_int_round(char** R s, size_t* R len, T* R a, T* R div, size_t num, int* R sel) {
 	VectorExec(sel, num, [&] (auto m) {
 		const T dv = (T)div[m];
 		T av = (T)a[m];
@@ -283,10 +254,11 @@ NO_INLINE void str_int_round(char** R s, size_t* R len, int64_t* R a, T* R div, 
 }
 
 template<typename T>
-NO_INLINE void tstr_int(char** R s, size_t* R len, int64_t* R a, size_t num, T* R log10, bool* R tmp_pred, int* R tmp_sel, int* R tmp_sel2) {
+NO_INLINE void
+tstr_int(char** R s, size_t* R len, T* R a, size_t num, T* R log10, bool* R tmp_pred, int* R tmp_sel, int* R tmp_sel2) {
 	// handle 0 and forget about them
 	{
-		size_t curr = sel_0(tmp_sel, num, a, nullptr);
+		size_t curr = sel_0<T>(tmp_sel, num, a, nullptr);
 		VectorExec(tmp_sel, curr, [&] (auto i) {
 			char* d = s[i];
 			*d = '0';
@@ -298,7 +270,7 @@ NO_INLINE void tstr_int(char** R s, size_t* R len, int64_t* R a, size_t num, T* 
 
 	// init and handle 0 and minus
 	{
-		num = sel_not0(tmp_sel, num, a, nullptr);
+		num = sel_not0<T>(tmp_sel, num, a, nullptr);
 		VectorExec(tmp_sel, num, [&] (auto i) {
 			len[i] = 0;
 			if (a[i] < 0) {
@@ -309,7 +281,7 @@ NO_INLINE void tstr_int(char** R s, size_t* R len, int64_t* R a, size_t num, T* 
 		});
 	}
 
-	trounddown_log10<T>(log10, (uint64_t*)a, num, tmp_sel);
+	trounddown_log10<T>(log10, a, num, tmp_sel);
 
 	// divide and modulo
 	{
@@ -380,6 +352,8 @@ struct VData {
 	int64_t tmp_vals[g_vector_size];
 
 	size_t pos[g_vector_size];
+
+	BaseType res_type = I64;
 
 	int64_t* res;
 };
@@ -463,8 +437,8 @@ to_str(const ColSpec& col, size_t colid, size_t num)
 
 			fix_ptrs(s, num, max_chars, &buf[0]);
 
-			switch (GetFittingType(cint.min, cint.max)) {
-#define A(C, B) case B: tstr_int<C>(s, &scol.len[0], a, num, \
+			switch (scol.res_type) {
+#define A(C, B) case B: tstr_int<C>(s, &scol.len[0], (C*)a, num, \
 							(C*)&scol.tmp_vals[0], &scol.tmp_pred[0], \
 							&scol.tmp_sel[0], &scol.tmp_sel2[0]); \
 							break;
@@ -501,15 +475,17 @@ gen_col(const ColType& ctype, const ColSpec& col, size_t colid, size_t start,
 
 	ctype.match(
 		[&] (Integer cint) {
+			scol.res_type = GetFittingType(cint.min, cint.max);
+
 			cint.cgen.match(
-				[&] (Sequential gseq) {
-					gen_seq(a, num, start, cint.min, cint.max);
+				[&] (Sequential& gseq) {
+					gen_seq(a, num, start, cint.min, cint.max, scol.res_type);
 				},
-				[&] (Uniform guni) {
-					gen_uni(a, num, start, cint.min, cint.max);
+				[&] (Uniform& guni) {
+					gen_uni(a, num, start, cint.min, cint.max, scol.res_type);
 				},
-				[&] (Poisson gpoisson) {
-					gen_poisson(a, num, start, cint.min, cint.max, gpoisson.mean);
+				[&] (Poisson& gpoisson) {
+					gen_poisson(a, num, start, cint.min, cint.max, gpoisson.mean, scol.res_type);
 				}
 			);
 
@@ -521,7 +497,7 @@ gen_col(const ColType& ctype, const ColSpec& col, size_t colid, size_t start,
 			assert(cstr.dict);
 			assert(scol.res);
 
-			cstr.dict->Lookup(s, &scol.len[0], (size_t*)scol.res, num, nullptr);
+			cstr.dict->Lookup(s, &scol.len[0], (size_t*)scol.res, num, nullptr, scol.res_type);
 		}
 	);
 

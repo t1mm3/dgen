@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "buffer.hpp"
+#include "utils.hpp"
 
 struct Dictionary {
 public:
@@ -18,7 +19,7 @@ protected:
 
 	static void lookup(char** __restrict__ ptr, size_t* __restrict__ len,
 		size_t* __restrict__ indices, size_t num, int* __restrict__ sel,
-		const Entry* __restrict__ entries, size_t max);
+		const Entry* __restrict__ entries, size_t max, BaseType t);
 public:
 	Dictionary();
 
@@ -36,8 +37,8 @@ public:
 		m_index.emplace_back(Entry { str, (size_t)len});
 	}
 
-	void Lookup(char** ptr, size_t* len, size_t* indices, size_t num, int* sel) const {
-		lookup(ptr, len, indices, num, sel, &m_index[0], GetCount());
+	void Lookup(char** ptr, size_t* len, size_t* indices, size_t num, int* sel, BaseType t = I64) const {
+		lookup(ptr, len, indices, num, sel, &m_index[0], GetCount(), t);
 	}
 };
 
