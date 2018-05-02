@@ -241,15 +241,16 @@ template<typename T>
 NO_INLINE void str_int_round(char** R s, size_t* R len, T* R a, T* R div, size_t num, int* R sel) {
 	VectorExec(sel, num, [&] (auto m) {
 		const T dv = (T)div[m];
-		T av = (T)a[m];
+		const T av = (T)a[m];
+		const T ndiv = av / dv;
+		const T nrem = av % dv;
 
 		char* R dst = s[m] + len[m];
-		*dst = '0' + (av / dv);
+		*dst = '0' + ndiv;
 		len[m]++;
 
-
-		a[m] = static_cast<T>(av % dv);
-		div[m] = static_cast<T>(dv / 10);
+		a[m] = nrem;
+		div[m] = dv / 10;
 	});
 }
 
