@@ -41,9 +41,7 @@ int main(int argc, char* argv[]) {
 
 			parse_config(std::move(fname), spec);
 		} else {
-			std::cerr << "Configuration is required\n"; 
-			std::cerr << desc << "\n";
-			return 1;
+			parse_stdin(spec);
 		}
 	} catch(std::exception &e) {
         std::cerr << "Exception: " << e.what() << std::endl;

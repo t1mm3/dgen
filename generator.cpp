@@ -114,7 +114,7 @@ NO_INLINE size_t sel_false(int* R out, size_t num, bool* pred, int* R sel) {
 
 NO_INLINE void str_int_round(char** R s, size_t* R len, int64_t* R a, int64_t* R div, size_t num, int* R sel) {
 	VectorExec(sel, num, [&] (auto m) {
-		char* dst = s[m] + len[m];
+		char* R dst = s[m] + len[m];
 		*dst = '0' + (a[m] / div[m]);
 		len[m]++;
 

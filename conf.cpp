@@ -198,14 +198,8 @@ parse_column(pt::ptree& node)
 }
 
 void
-parse_config(std::string&& fname, RelSpec& spec)
+parse_root(RelSpec& spec, pt::ptree& root)
 {
-	// Create a root
-	pt::ptree root;
-
-	// Load the json file in this ptree
-	pt::read_json(fname, root);
-
 	check_version(root.get<std::string>("version"));
 
 
@@ -226,4 +220,22 @@ parse_config(std::string&& fname, RelSpec& spec)
 		}
 	}
 	assert(matches == 1);
+}
+
+void
+parse_config(std::string&& fname, RelSpec& spec)
+{
+	pt::ptree root;
+
+	pt::read_json(fname, root);
+	parse_root(spec, root);
+}
+
+void
+parse_stdin(RelSpec& spec)
+{
+	pt::ptree root;
+
+	pt::read_json(std::cin, root);
+	parse_root(spec, root);
 }

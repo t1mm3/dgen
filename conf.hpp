@@ -5,5 +5,6 @@
 #include "spec.hpp"
 
 void parse_config(std::string&& fname, RelSpec& spec);
+void parse_stdin(RelSpec& spec);
 
 #endif
