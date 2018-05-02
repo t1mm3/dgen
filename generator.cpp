@@ -255,31 +255,50 @@ NO_INLINE void str_int_round(char** R s, size_t* R len, T* R a, T* R div, size_t
 }
 
 template<typename T>
+NO_INLINE void str_int_handle0(char** R s, size_t* R len, size_t num, int* R sel) {
+	VectorExec(sel, num, [&] (auto i) {
+		char* d = s[i];
+		*d = '0';
+		d++;
+		*d = '\0';
+		len[i] = 1;
+	});
+}
+
+template<typename T>
+NO_INLINE void str_int_init_and_minus(char** R s, T* R a, size_t* R len, size_t num, int* R sel) {
+	VectorExec(sel, num, [&] (auto i) {
+		len[i] = 0;
+		if (a[i] < 0) {
+			*s[i] = '-';
+			len[i]++;
+			a[i] = -a[i];
+		}
+	});
+}
+
+
+template<typename T>
+NO_INLINE void str_int_terminate(char** R s, size_t* R len, size_t num, int* R sel) {
+	VectorExec(sel, num, [&] (auto i) {
+		char* dst = s[i] + len[i];
+		*dst = '\0';
+	});
+}
+
+template<typename T>
 NO_INLINE void
 tstr_int(char** R s, size_t* R len, T* R a, size_t num, T* R log10, bool* R tmp_pred, int* R tmp_sel, int* R tmp_sel2) {
 	// handle 0 and forget about them
 	{
 		size_t curr = sel_0<T>(tmp_sel, num, a, nullptr);
-		VectorExec(tmp_sel, curr, [&] (auto i) {
-			char* d = s[i];
-			*d = '0';
-			d++;
-			*d = '\0';
-			len[i] = 1;
-		});
+		str_int_handle0<T>(s, len, curr, tmp_sel);
 	}
 
 	// init and handle 0 and minus
 	{
 		num = sel_not0<T>(tmp_sel, num, a, nullptr);
-		VectorExec(tmp_sel, num, [&] (auto i) {
-			len[i] = 0;
-			if (a[i] < 0) {
-				*s[i] = '-';
-				len[i]++;
-				a[i] = -a[i];
-			}
-		});
+		str_int_init_and_minus<T>(s, a, len, num, tmp_sel);
 	}
 
 	trounddown_log10<T>(log10, a, num, tmp_sel);
@@ -302,10 +321,7 @@ tstr_int(char** R s, size_t* R len, T* R a, size_t num, T* R log10, bool* R tmp_
 	}
 
 	// terminate with \0
-	for (size_t i=0; i<num; i++) {
-		char* dst = s[i] + len[i];
-		*dst = '\0';
-	}
+	str_int_terminate<T>(s, len, num, nullptr);
 }
 
 void
