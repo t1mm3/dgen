@@ -3,7 +3,8 @@
     "tuples" : 10000,
     "threads" : 2,
     "columns" : [
-        { "integer" : { "gen" : "random", "min" : 10, "max" : 100 } },
+        { "integer" : { "gen" : "random", "min" : 10, "max" : 10000 } },
+        { "integer" : { "gen" : "random", "min" : -10, "max" : 10000 } },
         { "integer" : { "gen" : {"poisson" : { "mean" : 1.0}}, "min" : -10, "max" : 10 } }
     ],
     "format" : {
