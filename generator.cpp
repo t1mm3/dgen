@@ -20,9 +20,15 @@ size_t g_chunk_size = 16*1024;
 constexpr size_t g_vector_size = 1024;
 
 #define R __restrict__
+
+#define ALIGN __attribute__((aligned(64)))
+#define HAS_ALIGN
+
 struct VData {
+	ALIGN size_t len[g_vector_size];
+	ALIGN size_t pos[g_vector_size];
+
 	int64_t a[g_vector_size];
-	size_t len[g_vector_size];
 	std::vector<char> buf;
 	char* s[g_vector_size];
 
@@ -31,8 +37,6 @@ struct VData {
 	int tmp_sel2[g_vector_size];
 
 	int64_t tmp_vals[g_vector_size];
-
-	size_t pos[g_vector_size];
 
 	BaseType res_type = I64;
 
@@ -54,21 +58,18 @@ calc_positions(size_t pos, size_t num, size_t num_cols,
 		}
 
 
-	if (num_cols == 1) {
+	switch (num_cols) {
+	case 0:
+		assert(false);
+		break;
+	case 1:
 		for (size_t i=0; i<num; i++) {
 			size_t c = 0;
 			KERNEL(true, false);
 		}
-	} else if (num_cols > 4) {
-		for (size_t i=0; i<num; i++) {
-			size_t c;
-			for (c = 0; c < num_cols-1; c++) {
-				KERNEL(false, true);
-			}
-			c = num_cols-1;
-			KERNEL(true, true);
-		}
-	} else {
+		break;
+
+	default:
 		for (size_t i=0; i<num; i++) {
 			size_t c;
 			for (c = 0; c < num_cols-1; c++) {
@@ -77,6 +78,7 @@ calc_positions(size_t pos, size_t num, size_t num_cols,
 			c = num_cols-1;
 			KERNEL(true, false);
 		}
+		break;
 	}
 	
 #undef KERNEL
