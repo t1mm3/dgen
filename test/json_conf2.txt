@@ -4,6 +4,7 @@
     "threads" : 2,
     "columns" : [
         { "integer" : { "gen" : "random", "min" : 10, "max" : 100 } },   
+        { "integer" : { "gen" : "random", "min" : -10, "max" : 100 } },   
         { "string" : {"index" : { "integer" : { "gen" : "random", "min" : 10, "max" : 100 } }, "file" : "@TEST_PATH@/words1.txt"}}
     ],
     "format" : {
