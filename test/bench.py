@@ -71,7 +71,7 @@ def run(script, descr):
 run("""
 {{
     "version" : "0.1",
-    "tuples" : 10000000,
+    "tuples" : 100000000,
     "threads" : 1,
     "columns" : [
         {{ "integer" : {{ "gen" : "random", "min" : 10, "max" : 10000000 }} }}
@@ -94,7 +94,7 @@ for i in range(0, 1024):
 run("""
 {{
     "version" : "0.1",
-    "tuples" : 10000,
+    "tuples" : 100000,
     "threads" : 1,
     "columns" : [
         {ints}
