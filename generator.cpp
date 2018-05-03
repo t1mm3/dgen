@@ -138,6 +138,19 @@ sel_gt0(int* R out, size_t num, T* R pred, int* R sel)
 	return res;
 }
 
+
+template<typename T>
+NO_INLINE size_t
+sel_gt(int* R out, size_t num, T* R pred, T val, int* R sel)
+{
+	size_t res = 0;
+	VectorExec(sel, num, [&] (auto m) {
+		out[res] = m;
+		res += pred[m] > val;
+	});
+	return res;
+}
+
 template<typename T>
 NO_INLINE size_t
 sel_not0(int* R out, size_t num, T* R pred, int* R sel)
@@ -237,8 +250,41 @@ rounddown_log10(uint64_t* R res, uint64_t* R x, size_t num, int* R sel)
 	trounddown_log10<uint64_t>(res, x, num, sel);
 }
 
+
+static constexpr char kDigits2[200] = {
+    '0','0','0','1','0','2','0','3','0','4','0','5','0','6','0','7','0','8','0','9',
+    '1','0','1','1','1','2','1','3','1','4','1','5','1','6','1','7','1','8','1','9',
+    '2','0','2','1','2','2','2','3','2','4','2','5','2','6','2','7','2','8','2','9',
+    '3','0','3','1','3','2','3','3','3','4','3','5','3','6','3','7','3','8','3','9',
+    '4','0','4','1','4','2','4','3','4','4','4','5','4','6','4','7','4','8','4','9',
+    '5','0','5','1','5','2','5','3','5','4','5','5','5','6','5','7','5','8','5','9',
+    '6','0','6','1','6','2','6','3','6','4','6','5','6','6','6','7','6','8','6','9',
+    '7','0','7','1','7','2','7','3','7','4','7','5','7','6','7','7','7','8','7','9',
+    '8','0','8','1','8','2','8','3','8','4','8','5','8','6','8','7','8','8','8','9',
+    '9','0','9','1','9','2','9','3','9','4','9','5','9','6','9','7','9','8','9','9'
+};
+
 template<typename T>
-NO_INLINE void str_int_round(char** R s, size_t* R len, T* R a, T* R div, size_t num, int* R sel) {
+NO_INLINE void str_int_round2(char** R s, size_t* R len, T* R a, T* R div, size_t num, int* R sel) {
+	VectorExec(sel, num, [&] (auto m) {
+		const T dv = (T)div[m] / 10;
+		const T av = (T)a[m];
+		const T ndiv = 2*(av / dv);
+		const T nrem = av % dv;
+
+		char* R dst = s[m] + len[m];
+		*dst = kDigits2[ndiv];
+		*(dst+1) = kDigits2[ndiv+1];
+
+		len[m]+=2;
+
+		a[m] = nrem;
+		div[m] = dv / 10;
+	});
+}
+
+template<typename T>
+NO_INLINE void str_int_round1(char** R s, size_t* R len, T* R a, T* R div, size_t num, int* R sel) {
 	VectorExec(sel, num, [&] (auto m) {
 		const T dv = (T)div[m];
 		const T av = (T)a[m];
@@ -305,18 +351,20 @@ tstr_int(char** R s, size_t* R len, T* R a, size_t num, T* R log10, bool* R tmp_
 
 	// divide and modulo
 	{
-		int* sel = tmp_sel;
 		size_t curr = num;
-
+#if 1
+		curr = sel_gt<T>(tmp_sel2, curr, log10, 99, tmp_sel);
 		while (curr > 0) {
-			str_int_round<T>(s, len, a, log10, curr, sel);
+			str_int_round2<T>(s, len, a, log10, curr, tmp_sel2);
 
-			int* newsel = tmp_sel;
-			if (sel == tmp_sel) {
-				newsel = tmp_sel2;
-			}
-			curr = sel_gt0<T>(newsel, curr, log10, sel);
-			sel = newsel;			
+			curr = sel_gt<T>(tmp_sel2, curr, log10, 99, tmp_sel2);
+		}
+#endif
+		// last digits
+		curr = sel_gt0<T>(tmp_sel, num, log10, tmp_sel);
+		while (curr > 0) {
+			str_int_round1<T>(s, len, a, log10, curr, tmp_sel);
+			curr = sel_gt0<T>(tmp_sel, num, log10, tmp_sel);
 		}
 	}
 
@@ -329,6 +377,7 @@ str_int(char** s, size_t* len, int64_t* a, size_t num, int64_t* R log10, bool* t
 {
 	tstr_int<int64_t>(s, len, a, num, log10, tmp_pred, tmp_sel, tmp_sel2);
 }
+
 
 #define KERNEL(LEN) \
 	for (size_t i=0; i<num; i++) { \
@@ -456,6 +505,10 @@ to_str(const ColSpec& col, size_t colid, size_t num)
 	col.ctype.match(
 		[&] (Integer cint) {
 			auto& buf = scol.buf;
+			if (cint.max > 4611686018427387905ll || cint.min < -4611686018427387905ll) {
+				throw std::invalid_argument("Integer ranges too high");
+			}
+
 			size_t max_chars = std::max(num_chars_int(cint.max), num_chars_int(cint.min));
 
 			// null terminator
