@@ -1,6 +1,6 @@
 {
     "version" : "0.1",
-    "tuples" : 1000000000,
+    "tuples" : 100000000,
     "threads" : 4,
     "columns" : [
         { "integer" : { "gen" : "random", "min" : 10, "max" : 10000000 } },   

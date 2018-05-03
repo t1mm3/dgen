@@ -4,7 +4,7 @@ add_definitions(-DBOOST_TEST_DYN_LINK)
 
 set(TEST_PATH "${CMAKE_CURRENT_BINARY_DIR}/")
 
-
+configure_file(buildpaths.py.in ${CMAKE_CURRENT_BINARY_DIR}/buildpaths.py)
 configure_file(buildpaths.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/test_buildpaths.cpp)
 add_library(libtestdgen STATIC ${CMAKE_CURRENT_BINARY_DIR}/test_buildpaths.cpp)
 
@@ -32,3 +32,6 @@ add_test(NAME ConfigTest COMMAND config)
 add_executable(csv csv_test.cpp)
 target_link_libraries(csv libdgen libtestdgen ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test(NAME CSV COMMAND csv)
+
+# benchmark
+configure_file(bench.py ${TEST_PATH}/bench.py COPYONLY)

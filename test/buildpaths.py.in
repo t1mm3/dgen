@@ -1,0 +1,5 @@
+def getTestPath():
+	return "@TEST_PATH@"
+
+def getProjectBinPath():
+	return "@PROJECT_BINARY_DIR@"
