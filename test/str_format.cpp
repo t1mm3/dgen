@@ -2,7 +2,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "generator.hpp"
+#include "primitives.hpp"
 #include "utils.hpp"
 #include <iostream>
 #include <limits>
@@ -40,7 +40,7 @@ void check_str_int(int64_t a) {
 		int64_t tmp;
 		bool pred;
 		int sel1, sel2;
-		str_int(&str1, &len1, &b, 1, &tmp, &pred, &sel1, &sel2);
+		str_int(&str1, &len1, &b, 1, &tmp, &pred, &sel1, &sel2, I64);
 	}
 
 	size_t len2 = snprintf(str2, 1024, "%ld", a);
