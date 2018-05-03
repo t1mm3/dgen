@@ -277,7 +277,10 @@ static constexpr char kDigits2[200] = {
 };
 
 template<typename T>
-NO_INLINE void str_int_round2(char** R s, size_t* R len, T* R a, T* R div, size_t num, int* R sel) {
+NO_INLINE void
+str_int_round2(char** R s, size_t* R len, T* R a, T* R div, size_t num,
+	int* R sel)
+{
 	VectorExec(sel, num, [&] (auto m) {
 		const T dv = (T)div[m] / 10;
 		const T av = (T)a[m];
@@ -296,7 +299,10 @@ NO_INLINE void str_int_round2(char** R s, size_t* R len, T* R a, T* R div, size_
 }
 
 template<typename T>
-NO_INLINE void str_int_round1(char** R s, size_t* R len, T* R a, T* R div, size_t num, int* R sel) {
+NO_INLINE void
+str_int_round1(char** R s, size_t* R len, T* R a, T* R div,
+	size_t num, int* R sel)
+{
 	VectorExec(sel, num, [&] (auto m) {
 		const T dv = (T)div[m];
 		const T av = (T)a[m];
@@ -313,7 +319,9 @@ NO_INLINE void str_int_round1(char** R s, size_t* R len, T* R a, T* R div, size_
 }
 
 template<typename T>
-NO_INLINE void str_int_handle0(char** R s, size_t* R len, size_t num, int* R sel) {
+NO_INLINE void
+str_int_handle0(char** R s, size_t* R len, size_t num, int* R sel)
+{
 	VectorExec(sel, num, [&] (auto i) {
 		char* d = s[i];
 		*d = '0';
@@ -324,7 +332,9 @@ NO_INLINE void str_int_handle0(char** R s, size_t* R len, size_t num, int* R sel
 }
 
 template<typename T>
-NO_INLINE void str_int_init_and_minus(char** R s, T* R a, size_t* R len, size_t num, int* R sel) {
+NO_INLINE void
+str_int_init_and_minus(char** R s, T* R a, size_t* R len, size_t num, int* R sel)
+{
 	VectorExec(sel, num, [&] (auto i) {
 		len[i] = 0;
 		if (a[i] < 0) {
@@ -337,7 +347,8 @@ NO_INLINE void str_int_init_and_minus(char** R s, T* R a, size_t* R len, size_t 
 
 
 template<typename T>
-NO_INLINE void str_int_terminate(char** R s, size_t* R len, size_t num, int* R sel)
+NO_INLINE void
+str_int_terminate(char** R s, size_t* R len, size_t num, int* R sel)
 {
 	VectorExec(sel, num, [&] (auto i) {
 		char* dst = s[i] + len[i];
@@ -348,7 +359,8 @@ NO_INLINE void str_int_terminate(char** R s, size_t* R len, size_t num, int* R s
 #include "gen_tables.hpp"
 
 template<typename T>
-NO_INLINE bool tstr_direct_lookup(char** R s, size_t* R len, const T* R a, size_t num)
+NO_INLINE bool
+tstr_direct_lookup(char** R s, size_t* R len, const T* R a, size_t num)
 {
 #define LUT(C) \
 	if (std::is_same<T, C>::value) { \
@@ -419,11 +431,14 @@ tstr_int(char** R s, size_t* R len, T* R a, size_t num, T* R log10,
 }
 
 void
-str_int(char** R s, size_t* R len, int64_t* R a, size_t num, int64_t* R log10, bool* R tmp_pred,
-	int* R tmp_sel, int* R tmp_sel2, BaseType t)
+str_int(char** R s, size_t* R len, int64_t* R a, size_t num, 
+	int64_t* R log10, bool* R tmp_pred, int* R tmp_sel,
+	int* R tmp_sel2, BaseType t)
 {
 	switch (t) {
-#define A(C, B) case B: tstr_int<C>(s, len, (C*)a, num, (C*)log10, tmp_pred, tmp_sel, tmp_sel2); break;
+#define A(C, B) case B: tstr_int<C>(s, len, (C*)a, num, (C*)log10, \
+							tmp_pred, tmp_sel, tmp_sel2); \
+						break;
 		A(int8_t, I8);
 		A(uint8_t, U8);
 
@@ -455,19 +470,22 @@ str_int(char** R s, size_t* R len, int64_t* R a, size_t num, int64_t* R log10, b
 
 template<size_t sep_len>
 NO_INLINE void
-tscatter_out(char* R dest, size_t* R pos, char** R strs, size_t* R lens, const char* R sep, size_t num)
+tscatter_out(char* R dest, size_t* R pos, char** R strs, size_t* R lens,
+	const char* R sep, size_t num)
 {
 	KERNEL(sep_len);
 }
 
 NO_INLINE void
-gscatter_out(char* R dest, size_t* R pos, char** R strs, size_t* R lens, const char* R sep, size_t sep_len, size_t num)
+gscatter_out(char* R dest, size_t* R pos, char** R strs, size_t* R lens,
+	const char* R sep, size_t sep_len, size_t num)
 {
 	KERNEL(sep_len);
 }
 
 NO_INLINE void
-scatter_out(char* R dest, size_t* R pos, char** R strs, size_t* R lens, const char* R sep, size_t sep_len, size_t num)
+scatter_out(char* R dest, size_t* R pos, char** R strs, size_t* R lens,
+	const char* R sep, size_t sep_len, size_t num)
 {
 	switch(sep_len) {
 #define A(i) case i: 	tscatter_out<i>(dest, pos, strs, lens, sep, num); break;
