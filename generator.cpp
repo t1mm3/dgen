@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <iostream>
+#include <type_traits>
 
 size_t g_chunk_size = 16*1024;
 constexpr size_t g_vector_size = 1024;
@@ -325,16 +326,48 @@ NO_INLINE void str_int_init_and_minus(char** R s, T* R a, size_t* R len, size_t 
 
 
 template<typename T>
-NO_INLINE void str_int_terminate(char** R s, size_t* R len, size_t num, int* R sel) {
+NO_INLINE void str_int_terminate(char** R s, size_t* R len, size_t num, int* R sel)
+{
 	VectorExec(sel, num, [&] (auto i) {
 		char* dst = s[i] + len[i];
 		*dst = '\0';
 	});
 }
 
+#include "gen_tables.hpp"
+
+template<typename T>
+NO_INLINE bool tstr_direct_lookup(char** R s, size_t* R len, const T* R a, size_t num)
+{
+#define LUT(C) \
+	if (std::is_same<T, C>::value) { \
+		VectorExec(nullptr, num, [&] (size_t i) { \
+			assert((int32_t)a[i] >= (int32_t)std::numeric_limits<C>::min()); \
+			int32_t v = (int32_t)a[i] - (int32_t)std::numeric_limits<C>::min(); \
+			assert(v >= 0); \
+			assert(v <= C##_int2str_lut_len); \
+			s[i] = (char*)C##_int2str_lut[v].s; \
+			len[i] = C##_int2str_lut[v].l; \
+		}); \
+		return true; \
+	}
+
+	LUT(int8_t)
+	LUT(uint8_t)
+	LUT(int16_t)
+	LUT(uint16_t)
+
+#undef LUT
+	return false;
+}
+
 template<typename T>
 NO_INLINE void
 tstr_int(char** R s, size_t* R len, T* R a, size_t num, T* R log10, bool* R tmp_pred, int* R tmp_sel, int* R tmp_sel2) {
+	if (tstr_direct_lookup<T>(s, len, a, num)) {
+		return;
+	}
+
 	// handle 0 and forget about them
 	{
 		size_t curr = sel_0<T>(tmp_sel, num, a, nullptr);
@@ -351,13 +384,18 @@ tstr_int(char** R s, size_t* R len, T* R a, size_t num, T* R log10, bool* R tmp_
 
 	// divide and modulo
 	{
-		size_t curr = num;
-#if 1
-		curr = sel_gt<T>(tmp_sel2, curr, log10, 99, tmp_sel);
-		while (curr > 0) {
-			str_int_round2<T>(s, len, a, log10, curr, tmp_sel2);
+		size_t curr;
 
-			curr = sel_gt<T>(tmp_sel2, curr, log10, 99, tmp_sel2);
+#if 1
+		if (sizeof(T) > 1) {
+			curr = num;
+			curr = sel_gt<T>(tmp_sel2, curr, log10, 99, tmp_sel);
+
+			while (curr > 0) {
+				str_int_round2<T>(s, len, a, log10, curr, tmp_sel2);
+
+				curr = sel_gt<T>(tmp_sel2, curr, log10, 99, tmp_sel2);
+			}
 		}
 #endif
 		// last digits
