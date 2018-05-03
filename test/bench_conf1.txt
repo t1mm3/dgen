@@ -1,7 +1,7 @@
 {
     "version" : "0.1",
     "tuples" : 100000000,
-    "threads" : 4,
+    "threads" : 1,
     "columns" : [
         { "integer" : { "gen" : "random", "min" : 10, "max" : 10000000 } },   
         { "string" : {"index" : { "integer" : { "gen" : "random", "min" : 10, "max" : 100 } }, "file" : "@TEST_PATH@/words1.txt"}}
