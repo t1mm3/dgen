@@ -43,7 +43,7 @@ NO_INLINE size_t
 calc_positions(size_t pos, size_t num, size_t num_cols,
 	VData* R cols, size_t len_sep, size_t len_nl)
 {
-#define KERNEL(LAST_COL)  { \
+#define KERNEL(LAST_COL, MANY_COLS)  { \
 			cols[c].pos[i] = pos; \
 			pos += cols[c].len[i]; \
 			if (LAST_COL) { \
@@ -57,19 +57,26 @@ calc_positions(size_t pos, size_t num, size_t num_cols,
 	if (num_cols == 1) {
 		for (size_t i=0; i<num; i++) {
 			size_t c = 0;
-			KERNEL(true);
+			KERNEL(true, false);
 		}
-
-		return pos;
-	}
-
-	for (size_t i=0; i<num; i++) {
-		size_t c;
-		for (c = 0; c < num_cols-1; c++) {
-			KERNEL(false);
+	} else if (num_cols > 4) {
+		for (size_t i=0; i<num; i++) {
+			size_t c;
+			for (c = 0; c < num_cols-1; c++) {
+				KERNEL(false, true);
+			}
+			c = num_cols-1;
+			KERNEL(true, true);
 		}
-		c = num_cols-1;
-		KERNEL(true);
+	} else {
+		for (size_t i=0; i<num; i++) {
+			size_t c;
+			for (c = 0; c < num_cols-1; c++) {
+				KERNEL(false, false);
+			}
+			c = num_cols-1;
+			KERNEL(true, false);
+		}
 	}
 	
 #undef KERNEL

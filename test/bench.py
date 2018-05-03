@@ -65,7 +65,7 @@ def run(script, descr):
 
 		with open(os.devnull, "w") as f:
 			start_time = time.time()
-			subprocess.call(["perf", "record", "--", command, temp.name], stdout=f)
+			subprocess.call(["perf", "record", "-e", "cycles,dTLB-load-misses,LLC-load-misses", "--", command, temp.name], stdout=f)
 			print("%s\t%s" % (descr, time.time() - start_time))
 
 run("""
