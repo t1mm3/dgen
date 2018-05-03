@@ -74,7 +74,7 @@ run("""
     "tuples" : 100000000,
     "threads" : 1,
     "columns" : [
-        {{ "integer" : {{ "gen" : "random", "min" : 10, "max" : 10000000 }} }}
+        {{ "integer" : {{ "gen" : "random", "min" : 10, "max" : 10000 }} }}
     ],
     "format" : {{
         "csv" : {{ "comma" : "|", "newline" : "\\n"}}
@@ -88,7 +88,7 @@ first = True
 for i in range(0, 1024):
 	sep = "" if first else ",\n"
 
-	int1024 = int1024 + """{sep}{{ "integer" : {{ "gen" : "random", "min" : 10, "max" : 10000000 }} }}""".format(sep=sep)
+	int1024 = int1024 + """{sep}{{ "integer" : {{ "gen" : "random", "min" : 10, "max" : 10000 }} }}""".format(sep=sep)
 	first = False
 
 run("""
