@@ -19,8 +19,6 @@
 size_t g_chunk_size = 16*1024;
 constexpr size_t g_vector_size = 1024;
 
-#include <random>
-
 #define R __restrict__
 struct VData {
 	int64_t a[g_vector_size];
@@ -41,25 +39,40 @@ struct VData {
 	int64_t* res;
 };
 
-NO_INLINE size_t calc_positions(size_t pos, size_t num, size_t num_cols,
+NO_INLINE size_t
+calc_positions(size_t pos, size_t num, size_t num_cols,
 	VData* R cols, size_t len_sep, size_t len_nl)
 {
-	for (size_t i=0; i<num; i++) {
-		for (size_t c = 0; c < num_cols; c++) {
-			bool last_col = c == num_cols-1;
-
-			cols[c].pos[i] = pos;
-
-			pos += cols[c].len[i];
-			
-			if (last_col) {
-				pos += len_nl;
-			} else {
-				pos += len_sep;
-			}
+#define KERNEL(LAST_COL)  { \
+			cols[c].pos[i] = pos; \
+			pos += cols[c].len[i]; \
+			if (LAST_COL) { \
+				pos += len_nl; \
+			} else { \
+				pos += len_sep; \
+			} \
 		}
+
+
+	if (num_cols == 1) {
+		for (size_t i=0; i<num; i++) {
+			size_t c = 0;
+			KERNEL(true);
+		}
+
+		return pos;
 	}
 
+	for (size_t i=0; i<num; i++) {
+		size_t c;
+		for (c = 0; c < num_cols-1; c++) {
+			KERNEL(false);
+		}
+		c = num_cols-1;
+		KERNEL(true);
+	}
+	
+#undef KERNEL
 	return pos;
 }
 
