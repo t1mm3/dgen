@@ -12,7 +12,7 @@ struct OutputQueue {
 private:
 	std::vector<std::string> m_queue;
 	std::atomic<bool>* m_used;
-	size_t m_read_pos;
+	std::atomic<size_t> m_read_pos;
 	Output& m_out;
 	std::mutex m_print_lock;
 	const size_t m_num_threads;

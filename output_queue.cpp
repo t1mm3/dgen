@@ -55,7 +55,7 @@ OutputQueue::Push(Task& t, std::string&& final)
 
 	// scan previous work & output if nobody did
 	bool ordered = true;
-	for (auto i = m_read_pos; i <= id; i++) {
+	for (auto i = m_read_pos.load(); i <= id; i++) {
 		ordered &= m_used[i].load();
 	}
 
@@ -72,8 +72,8 @@ OutputQueue::flush(size_t npos)
 	size_t i;
 	for (i = m_read_pos; i < m_queue.size() && m_used[i].load(); i++) {
 		m_out(std::move(m_queue[i]));
+		m_read_pos++;
 	}
 
 	assert(i >= npos);
-	m_read_pos = i;
 }
