@@ -10,6 +10,8 @@
 #include <iostream>
 #include <mutex>
 
+std::atomic<int64_t> g_rows;
+
 struct CsvChecker {
 	size_t threads = 2;
 	size_t card = 100;
@@ -94,13 +96,13 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 					auto ival = std::stoll(val);
 
 					if (ival < cint.min || ival > cint.max) {
-						std::cerr << "ival=" << ival << " from '" << val << "' min=" << cint.min << " max=" << cint.max << std::endl; 
+						std::cerr << "col=" << col << " ival=" << ival << " from '" << val << "' min=" << cint.min << " max=" << cint.max << std::endl; 
 					}
-					BOOST_CHECK(ival >= cint.min);
-					BOOST_CHECK(ival <= cint.max);
+					BOOST_REQUIRE(ival >= cint.min);
+					BOOST_REQUIRE(ival <= cint.max);
 
 					if (enforce_seq) {
-						BOOST_CHECK(prev < ival);
+						BOOST_REQUIRE(prev < ival);
 						prev = ival;
 					}
 				},
@@ -115,6 +117,7 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 			BOOST_REQUIRE_EQUAL(col, spec.cols.size());
 			BOOST_REQUIRE(num_lines < spec.card);
 			num_lines++;
+			g_rows++;
 		} else {
 			BOOST_REQUIRE_EQUAL(col, 0);
 		}
@@ -125,14 +128,19 @@ BOOST_AUTO_TEST_CASE(csv_ints_backend) {
 	g_chunk_size = 1024 + 128;
 	CsvChecker csv;
 
-	for (int threads=1; threads<=4; threads*=2) {
+	for (int threads=1; threads<=32; threads*=2) {
 		for (size_t card = 100; card <= 10000; card *= 10) {
 			csv.card = card;
+			csv.spec.card = card;
 			auto run = [&] () {
+				g_rows = 0;
 				csv.threads = threads;
+				csv.spec.threads = threads;
 
 				std::cerr << "card=" << csv.card << " threads=" << csv.threads << std::endl;
 				csv();
+
+				BOOST_REQUIRE_EQUAL(g_rows, card);
 			};
 
 			run();
@@ -149,14 +157,19 @@ BOOST_AUTO_TEST_CASE(csv_strs_backend) {
 
 	csv.string = true;
 
-	for (int threads=1; threads<=4; threads*=2) {
+	for (int threads=1; threads<=32; threads*=2) {
 		for (size_t card = 100; card <= 10000; card *= 10) {
 			csv.card = card;
+			csv.spec.card = card;
 			auto run = [&] () {
+				g_rows = 0;
 				csv.threads = threads;
+				csv.spec.threads = threads;
 
 				std::cerr << "card=" << csv.card << " threads=" << csv.threads << std::endl;
 				csv();
+
+				BOOST_REQUIRE_EQUAL(g_rows, card);
 			};
 
 			run();
@@ -210,6 +223,8 @@ BOOST_AUTO_TEST_CASE(json_parse_str_inline) {
 
 BOOST_AUTO_TEST_CASE(json_parse_seq) {
 	CsvChecker csv;
+
+	g_chunk_size = 1024 + 128;
 
 	csv.spec.cols.clear();
 	csv.spec.card = 0;

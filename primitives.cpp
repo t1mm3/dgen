@@ -97,11 +97,16 @@ NO_INLINE void
 tgen_seq(T* R res, size_t num, int64_t start, int64_t min, int64_t max)
 {
 	assert(max >= min);
-	T dom = max - min;
+	const size_t dom = (int64_t)max - (int64_t)min;
+	const T dmin = min;
 
 	for (size_t i=0; i<num; i++) {
-		T k = start + i;
-		res[i] = (k % dom) + min;
+		const int64_t k = start + i;
+		res[i] = (k % dom) + dmin;
+		if(res[i] < min) {
+			std::cerr << "res[i]=" << res[i] << " min=" << min << " k=" << k << " start=" << start << std::endl; 
+			assert(false);
+		}
 	}
 }
 
