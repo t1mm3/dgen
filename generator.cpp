@@ -279,7 +279,7 @@ generate(RelSpec& spec, Output& out)
 	}
 
 	auto num_threads = std::min(spec.threads, (spec.card / (g_chunk_size + g_chunk_size - 1)));
-	if (num_threads < 0) {
+	if (num_threads <= 0) {
 		num_threads = 1;
 	}
 
@@ -288,7 +288,7 @@ generate(RelSpec& spec, Output& out)
 	size_t chunkId = 0;
 	size_t num_chunks = (todo + g_chunk_size - 1) / g_chunk_size;
 
-	auto output_queue = std::make_unique<OutputQueue>(num_chunks, out);
+	auto output_queue = std::make_unique<OutputQueue>(num_chunks, num_threads, out);
 	ThreadPool<Task, DoTask> g_pool(num_threads);
 
 	while (todo > 0) {

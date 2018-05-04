@@ -2,25 +2,37 @@
 #include "task.hpp"
 #include <cassert>
 
-OutputQueue::OutputQueue(size_t capacity, Output& out)
- : m_out(out)
+OutputQueue::OutputQueue(size_t capacity, size_t num_threads, Output& out)
+ : m_out(out), m_num_threads(num_threads)
 {
 	assert(capacity > 0);
-	m_queue.resize(capacity);
-	m_used = new std::atomic<bool>[capacity];
-	for (size_t i=0; i<capacity; i++) {
-		m_used[i] = false;
+	assert(num_threads > 0);
+
+	if (num_threads > 1) {
+		m_queue.resize(capacity);
+		m_used = new std::atomic<bool>[capacity];
+		for (size_t i=0; i<capacity; i++) {
+			m_used[i] = false;
+		}
+		m_read_pos = 0;
 	}
-	m_read_pos = 0;
 }
 
 OutputQueue::~OutputQueue() {
-	delete[] m_used;
+	if (m_num_threads > 1) {
+		delete[] m_used;
+	}
 }
 
 void
 OutputQueue::Push(Task& t, std::string&& final)
 {
+	if (m_num_threads == 1) {
+		// single threaded 
+		m_out(std::move(final));
+		return;
+	}
+
 	auto id = t.taskId;
 	assert(id >= m_read_pos.load());
 	assert(id >= 0);

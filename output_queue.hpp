@@ -14,8 +14,9 @@ struct OutputQueue {
 	std::atomic<size_t> m_read_pos;
 	Output& m_out;
 	std::mutex m_print_lock;
+	const size_t m_num_threads;
 
-	OutputQueue(size_t capacity, Output& out);
+	OutputQueue(size_t capacity, size_t num_threads, Output& out);
 
 	~OutputQueue();
 
