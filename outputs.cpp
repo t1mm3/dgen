@@ -4,7 +4,7 @@
 
 void CoutOutput::operator()(std::string&& data)
 {
-	std::cout << data;
+	std::cout << std::move(data);
 }
 
 
