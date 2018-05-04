@@ -15,6 +15,8 @@ struct CsvChecker {
 	size_t card = 100;
 	bool string = false;
 
+	bool enforce_seq = false;
+
 	RelSpec spec;
 
 	CsvChecker(bool str);
@@ -66,6 +68,7 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 {
 	std::stringstream ss(data);
 	size_t num_lines = 0;
+	int64_t prev = -1;
 	while (ss.good()) {
 		// get a line
 		std::string line;
@@ -95,6 +98,11 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 					}
 					BOOST_CHECK(ival >= cint.min);
 					BOOST_CHECK(ival <= cint.max);
+
+					if (enforce_seq) {
+						BOOST_CHECK(prev < ival);
+						prev = ival;
+					}
 				},
 				[&] (String unused2) {
 				}
@@ -194,6 +202,21 @@ BOOST_AUTO_TEST_CASE(json_parse_str_inline) {
 	csv.spec.threads = 0;
 
 	parse_config(std::string(g_path) + std::string("json_conf3.txt"),
+		csv.spec);
+
+	csv();
+}
+
+
+BOOST_AUTO_TEST_CASE(json_parse_seq) {
+	CsvChecker csv;
+
+	csv.spec.cols.clear();
+	csv.spec.card = 0;
+	csv.spec.threads = 0;
+	csv.enforce_seq = true;
+
+	parse_config(std::string(g_path) + std::string("json_conf4.txt"),
 		csv.spec);
 
 	csv();

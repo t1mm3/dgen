@@ -13,6 +13,7 @@ configure_file(words1.txt ${TEST_PATH}/words1.txt COPYONLY)
 configure_file(json_conf1.txt ${TEST_PATH}/json_conf1.txt)
 configure_file(json_conf2.txt ${TEST_PATH}/json_conf2.txt)
 configure_file(json_conf3.txt ${TEST_PATH}/json_conf3.txt)
+configure_file(json_conf4.txt ${TEST_PATH}/json_conf4.txt)
 
 configure_file(bench_conf1.txt ${TEST_PATH}/bench_conf1.txt)
 

@@ -1,0 +1,12 @@
+{
+    "version" : "0.1",
+    "tuples" : 10000,
+    "threads" : 2,
+    "columns" : [
+        { "integer" : { "gen" : "sequential", "min" : 0, "max" : 4000000} }
+    ],
+    "format" : {
+        "csv" : { "comma" : "|", "newline" : "\n"}
+    },
+    "output" : "stdout"
+}
