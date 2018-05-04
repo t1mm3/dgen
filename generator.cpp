@@ -11,6 +11,8 @@
 #include "build.hpp"
 #include "utils.hpp"
 #include "dict.hpp"
+#include "task.hpp"
+#include "output_queue.hpp"
 
 #include <memory>
 #include <iostream>
@@ -106,14 +108,7 @@ constexpr size_t num_chars_int(int64_t x) {
 	return r;
 }
 
-
-struct Task {
-	size_t start;
-	size_t end;
-
-	RelSpec* rel;
-	Output* outp;
-};
+struct OutputQueue;
 
 struct DoTask {
 	void operator()(Task&& t);
@@ -258,7 +253,7 @@ DoTask::operator()(Task&& t)
 		off += num;
 	}
 
-	(*t.outp)(final);
+	(*t.outp)(t, std::move(final));
 }
 
 NO_INLINE void
@@ -288,17 +283,23 @@ generate(RelSpec& spec, Output& out)
 		num_threads = 1;
 	}
 
-	ThreadPool<Task, DoTask> g_pool(num_threads);
-
-	size_t num = spec.card;
-	size_t todo = num;
+	size_t todo = spec.card;
 	size_t offset = 0;
+	size_t chunkId = 0;
+	size_t num_chunks = (todo + g_chunk_size - 1) / g_chunk_size;
+
+	auto output_queue = std::make_unique<OutputQueue>(num_chunks, out);
+	ThreadPool<Task, DoTask> g_pool(num_threads);
 
 	while (todo > 0) {
 		const size_t num = std::min(g_chunk_size, todo);
 
-		g_pool.Push(Task {offset, offset + num, &spec, &out});
+		g_pool.Push(Task {offset, offset + num, &spec, output_queue.get(), chunkId});
+
+		chunkId++;
 		todo -= num;
 		offset += num;
 	};
+
+	assert(num_chunks == chunkId);
 }
