@@ -1,6 +1,7 @@
 #include "spec.hpp"
 
 #include <iostream>
+#include <thread>
 #include <boost/program_options.hpp>
 
 #include "conf.hpp"
@@ -14,11 +15,17 @@ int main(int argc, char* argv[]) {
 
 	std::cerr << "dgen " << Build::GetVersionStr() << " " << Build::GetTypeStr() << std::endl;
 
+	int64_t overwr_num_threads = -1;
+	int64_t overwr_num_tuples = -1;
 	namespace po = boost::program_options;
 	// Declare the supported options.
 	po::options_description desc("Allowed options");
 	desc.add_options()
-		("help", "produce help message")
+		("help,h", "produce help message")
+		("threads,t", po::value<int64_t>(&overwr_num_threads)->default_value(overwr_num_threads),
+				"overwrite number of threads used")
+		("num,n", po::value<int64_t>(&overwr_num_tuples)->default_value(overwr_num_tuples),
+				"overwrite output cardinality")
 		("conf", po::value<std::string>(), "Configuration file")
 	;
 
@@ -42,6 +49,14 @@ int main(int argc, char* argv[]) {
 			parse_config(std::move(fname), spec);
 		} else {
 			parse_stdin(spec);
+		}
+
+		if (overwr_num_threads >= 1) {
+			spec.threads = overwr_num_threads;
+		}
+
+		if (overwr_num_tuples >= 1) {
+			spec.card = overwr_num_tuples;
 		}
 	} catch(std::exception &e) {
         std::cerr << "Exception: " << e.what() << std::endl;
