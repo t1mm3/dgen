@@ -15,6 +15,8 @@ configure_file(json_conf2.txt ${TEST_PATH}/json_conf2.txt)
 configure_file(json_conf3.txt ${TEST_PATH}/json_conf3.txt)
 configure_file(json_conf4.txt ${TEST_PATH}/json_conf4.txt)
 
+configure_file(cards.py ${TEST_PATH}/cards.py COPYONLY)
+
 configure_file(bench_conf1.txt ${TEST_PATH}/bench_conf1.txt)
 
 add_executable(str str_format.cpp)
@@ -33,6 +35,9 @@ add_test(NAME ConfigTest COMMAND config)
 add_executable(csv csv_test.cpp)
 target_link_libraries(csv libdgen libtestdgen ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test(NAME CSV COMMAND csv)
+
+find_package(PythonInterp 2.7 REQUIRED)
+add_test(NAME Card COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cards.py)
 
 # benchmark
 configure_file(bench.py ${TEST_PATH}/bench.py COPYONLY)
