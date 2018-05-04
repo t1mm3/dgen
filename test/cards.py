@@ -16,10 +16,10 @@ def test_card(num):
 print("test_card")
 
 card = 1
-for c in range(0, 10):
+for c in range(0, 8):
 	test_card(card)
 	card = card * 10
 
 
 
-test_card(0)
+# test_card(0)

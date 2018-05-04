@@ -9,6 +9,7 @@ OutputQueue::OutputQueue(size_t capacity, size_t num_threads, Output& out)
 	assert(num_threads > 0);
 
 	if (num_threads > 1) {
+		m_todo = capacity;
 		m_queue.resize(capacity);
 		m_used = new std::atomic<bool>[capacity];
 		for (size_t i=0; i<capacity; i++) {
@@ -20,6 +21,9 @@ OutputQueue::OutputQueue(size_t capacity, size_t num_threads, Output& out)
 
 OutputQueue::~OutputQueue() {
 	if (m_num_threads > 1) {
+		// flush
+		assert(m_read_pos == m_queue.size());
+
 		delete[] m_used;
 	}
 }
@@ -34,7 +38,6 @@ OutputQueue::Push(Task& t, std::string&& final)
 	}
 
 	auto id = t.taskId;
-	assert(id >= m_read_pos.load());
 	assert(id >= 0);
 	assert(id <= m_queue.capacity());
 
@@ -51,18 +54,26 @@ OutputQueue::Push(Task& t, std::string&& final)
 	}
 
 	// scan previous work & output if nobody did
-	auto rpos = m_read_pos.load();
 	bool ordered = true;
-	for (auto i = rpos; i <= id; i++) {
+	for (auto i = m_read_pos; i <= id; i++) {
 		ordered &= m_used[i].load();
 	}
 
-	if (ordered && m_read_pos.compare_exchange_strong(rpos, id+1)) {
-		std::lock_guard<std::mutex> lock(m_print_lock);
-
-		for (auto i = rpos; i <= id; i++) {
-			assert(m_used[i].load());
-			m_out(std::move(m_queue[id]));
-		}
+	if (ordered || --m_todo == 0) {
+		flush(id);
 	}
+}
+
+void
+OutputQueue::flush(size_t npos)
+{
+	std::lock_guard<std::mutex> lock(m_print_lock);
+
+	size_t i;
+	for (i = m_read_pos; i < m_queue.size() && m_used[i].load(); i++) {
+		m_out(std::move(m_queue[i]));
+	}
+
+	assert(i >= npos);
+	m_read_pos = i;
 }
