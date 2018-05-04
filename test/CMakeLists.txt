@@ -37,7 +37,7 @@ target_link_libraries(csv libdgen libtestdgen ${Boost_FILESYSTEM_LIBRARY} ${Boos
 add_test(NAME CSV COMMAND csv)
 
 find_package(PythonInterp 2.7 REQUIRED)
-add_test(NAME Card COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cards.py)
+add_test(NAME Card COMMAND ${PYTHON_EXECUTABLE} ${TEST_PATH}/cards.py)
 
 # benchmark
 configure_file(bench.py ${TEST_PATH}/bench.py COPYONLY)

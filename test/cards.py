@@ -1,6 +1,8 @@
 #!/bin/env python2
+
 from buildpaths import (getProjectBinPath, getTestPath)
 from subprocess import Popen, PIPE
+import sys
 
 def test_card(num):
 	p = Popen([
@@ -16,10 +18,13 @@ def test_card(num):
 print("test_card")
 
 card = 1
-for c in range(0, 8):
+for c in range(0, 9):
 	test_card(card)
 	card = card * 10
 
 
 
 # test_card(0)
+
+print("Success")
+exit(0)
