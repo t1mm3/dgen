@@ -263,6 +263,13 @@ generate(RelSpec& spec, Output& out)
 	assert(g_chunk_size > 0);
 	assert(g_vector_size > 0);
 
+	if (spec.threads <= 0) {
+		spec.threads = std::thread::hardware_concurrency();
+	}
+	if (spec.card <= 0) {
+		return;
+	}
+
 	std::vector<std::unique_ptr<Dictionary>> objs;
 
 	// create dictionaries

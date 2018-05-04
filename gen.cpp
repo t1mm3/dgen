@@ -51,11 +51,11 @@ int main(int argc, char* argv[]) {
 			parse_stdin(spec);
 		}
 
-		if (overwr_num_threads >= 1) {
+		if (overwr_num_threads >= 0) {
 			spec.threads = overwr_num_threads;
 		}
 
-		if (overwr_num_tuples >= 1) {
+		if (overwr_num_tuples >= 0) {
 			spec.card = overwr_num_tuples;
 		}
 	} catch(std::exception &e) {

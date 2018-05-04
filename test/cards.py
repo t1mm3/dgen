@@ -17,14 +17,12 @@ def test_card(num):
 
 print("test_card")
 
+test_card(0)
+
 card = 1
 for c in range(0, 9):
 	test_card(card)
 	card = card * 10
-
-
-
-# test_card(0)
 
 print("Success")
 exit(0)
