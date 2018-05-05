@@ -1,0 +1,14 @@
+{
+    "version" : "0.1",
+    "tuples" : 1000000,
+    "threads" : 32,
+    "columns" : [
+        { "integer" : { "gen" : "random", "min" : 10, "max" : 10000 } },
+        { "integer" : { "gen" : "random", "min" : -10, "max" : 10000 } },
+        { "integer" : { "gen" : {"poisson" : { "mean" : 1.0}}, "min" : -10, "max" : 10 } }
+    ],
+    "format" : {
+        "csv" : { "comma" : "|", "newline" : "\n"}
+    },
+    "output" : "stdout" 
+}
