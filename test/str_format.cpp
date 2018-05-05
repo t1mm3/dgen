@@ -66,6 +66,9 @@ BOOST_AUTO_TEST_CASE(int2str_power2_env) {
 	int64_t max = std::numeric_limits<int64_t>::max()-1;
 	int64_t min = 1;
 	for (int64_t i=min; i<max; i*=2 ) {
+		if (i >= std::numeric_limits<int64_t>::max() / 2) {
+			break;
+		}
 		check_str_int(i);
 		check_str_int(i-1);
 		check_str_int(i+1);
