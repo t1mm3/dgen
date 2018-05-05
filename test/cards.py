@@ -1,6 +1,6 @@
 #!/bin/env python2
 
-from buildpaths import (getProjectBinPath, getTestPath)
+from buildpaths import (getProjectBinPath, getTestPath, getParallelism)
 from subprocess import Popen, PIPE
 import sys
 from multiprocessing import Pool
@@ -27,7 +27,7 @@ if __name__ == '__main__':
 		tests = tests + [card]
 		card = card * 10
 
-	pool = Pool(processes=4)
+	pool = Pool(processes=getParallelism())
 	result = pool.map(test_card, tests)
 
 	both = zip(tests,result)

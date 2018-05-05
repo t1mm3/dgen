@@ -1,5 +1,14 @@
+from multiprocessing import cpu_count
+
 def getTestPath():
 	return "@TEST_PATH@"
 
 def getProjectBinPath():
 	return "@PROJECT_BINARY_DIR@"
+
+def getParallelism():
+	num = cpu_count()
+	assert(num > 0)
+	if num > 1:
+		return num / 2
+	return num

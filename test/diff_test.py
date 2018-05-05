@@ -1,9 +1,10 @@
 #!/bin/env python2
 
-from buildpaths import (getProjectBinPath, getTestPath)
+from buildpaths import (getProjectBinPath, getTestPath, getParallelism)
 from subprocess import Popen, PIPE
 import sys
 from multiprocessing import Pool
+
 
 def diff(opts):
 	(file, threads) = opts
@@ -27,7 +28,7 @@ def run(testnames, parallel):
 			tests = tests + [(testname, t)]
 
 	# run tests
-	pool = Pool(processes=4)
+	pool = Pool(processes=getParallelism())
 	result = pool.map(diff, tests)
 
 	both = zip(tests,result)
