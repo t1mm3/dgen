@@ -11,9 +11,13 @@ def test_card(num):
 			"-t", "32",
 			"-n", str(num)
 		], stdout=PIPE)
-	lines = sum(1 for _ in p.stdout)
-	print ("{num} == {lines}".format(num=num, lines=lines))
-	assert(num == lines)
+	lines = Popen(['wc', "-l"],stdin=p.stdout, stdout=PIPE)
+	p.stdout.close()
+	out, err = lines.communicate()
+	out = int(out.strip())
+
+	print ("'{num}' == '{lines}'".format(num=num, lines=out))
+	assert(num == out)
 
 print("test_card")
 
