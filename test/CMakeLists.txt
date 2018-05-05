@@ -11,12 +11,15 @@ add_library(libtestdgen STATIC ${CMAKE_CURRENT_BINARY_DIR}/test_buildpaths.cpp)
 # copy files
 configure_file(words1.txt ${TEST_PATH}/words1.txt COPYONLY)
 configure_file(json_conf1.txt ${TEST_PATH}/json_conf1.txt)
+configure_file(json_conf1.txt.expect ${TEST_PATH}/json_conf1.txt.expect)
 configure_file(json_conf2.txt ${TEST_PATH}/json_conf2.txt)
+configure_file(json_conf2.txt.expect ${TEST_PATH}/json_conf2.txt.expect)
 configure_file(json_conf3.txt ${TEST_PATH}/json_conf3.txt)
+configure_file(json_conf3.txt.expect ${TEST_PATH}/json_conf3.txt.expect)
 configure_file(json_conf4.txt ${TEST_PATH}/json_conf4.txt)
 
 configure_file(cards.py ${TEST_PATH}/cards.py COPYONLY)
-
+configure_file(diff_test.py ${TEST_PATH}/diff_test.py COPYONLY)
 configure_file(bench_conf1.txt ${TEST_PATH}/bench_conf1.txt)
 
 add_executable(str str_format.cpp)
@@ -38,6 +41,7 @@ add_test(NAME CSV COMMAND csv)
 
 find_package(PythonInterp 2.7 REQUIRED)
 add_test(NAME Card COMMAND ${PYTHON_EXECUTABLE} ${TEST_PATH}/cards.py)
+add_test(NAME Diff COMMAND ${PYTHON_EXECUTABLE} ${TEST_PATH}/diff_test.py)
 
 # benchmark
 configure_file(bench.py ${TEST_PATH}/bench.py COPYONLY)
