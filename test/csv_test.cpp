@@ -76,6 +76,8 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 		std::string line;
 		getline(ss, line, '\n');
 
+		std::cerr << "line='" << line << "'" << std::endl;
+
 		std::stringstream ls(line);
 		size_t col = 0;
 		while (ls.good() && ss.good()) {
@@ -92,7 +94,8 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 				[&] (Integer cint) {
 					BOOST_REQUIRE(val.size() > 0);
 
-					BOOST_REQUIRE(strlen(val.c_str()) == val.size());
+					std::cerr << "str='" << val << "'" << val.length() << std::endl;
+					BOOST_REQUIRE_EQUAL(strlen(val.c_str()), val.size());
 					auto ival = std::stoll(val);
 
 					if (ival < cint.min || ival > cint.max) {
