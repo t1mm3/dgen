@@ -66,3 +66,6 @@ target_link_libraries(dgen libdgen)
 ## Testing
 enable_testing()
 add_subdirectory(test)
+
+## Additional stuff
+add_subdirectory(comparisons)
