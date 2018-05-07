@@ -7,19 +7,6 @@ struct Build {
 	static const char* GetVersionStr();
 	static const char* GetGitCommit();
 	static const char* GetTypeStr();
-
-	template<typename F>
-	static constexpr void DebugOnly(F&& fun) {
-		fun();
-	}
-
-	static constexpr bool IsDebug() {
-		bool r = false;
-		DebugOnly([&] () {
-			r = true;
-		});
-		return r;
-	}
 };
 
 
