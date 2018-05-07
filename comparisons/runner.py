@@ -1,6 +1,7 @@
 #!/bin/env python2
 import time
 import os
+import sys
 from subprocess import Popen, PIPE
 
 def run_dev0(cmds):
@@ -29,21 +30,24 @@ def runN_wc(n, cmds):
 		times = times + [run_wc(cmds)]
 	return times
 
-def run(name, cmds):
+def run(file, name, cmds):
 	times = runN_wc(10, cmds)
-	print("{0}\t{1:10.2f} \t{2:10.2f} ".format(name, min(times), sum(times)/len(times)))
+	file.write("{0}\t{1:10.2f} \t{2:10.2f}\n".format(name, min(times), sum(times)/len(times)))
 
-def run_batch(num):
+def run_batch(f, num):
 	curr_dir = "@CMAKE_CURRENT_BINARY_DIR@/"
 	s = str(num)
-	run(s+"\tdgen           ", ["@PROJECT_BINARY_DIR@/dgen", curr_dir + "/conf1.json", "-n", s])
-	run(s+"\tdgen_4threads  ", ["@PROJECT_BINARY_DIR@/dgen", curr_dir + "/conf1.json", "-t", "4" ,"-n", s])
-	run(s+"\tnaive_printf   ", [curr_dir + "csv_naive_printf", s])
-	run(s+"\tnaive_cppstream", [curr_dir + "csv_naive_cppstream", s])
+	run(f, s+"\tdgen           ", ["@PROJECT_BINARY_DIR@/dgen", curr_dir + "/conf1.json", "-n", s])
+	run(f, s+"\tdgen_4threads  ", ["@PROJECT_BINARY_DIR@/dgen", curr_dir + "/conf1.json", "-t", "4" ,"-n", s])
+	run(f, s+"\tnaive_printf   ", [curr_dir + "csv_naive_printf", s])
+	run(f, s+"\tnaive_cppstream", [curr_dir + "csv_naive_cppstream", s])
+
+def run_all(f):
+	f.write("#NUM\tNAME\tMIN\tMEAN\n")
+	run_batch(f, 10000)
+	run_batch(f, 100000)
+	run_batch(f, 1000000)
+	run_batch(f, 10000000)
 
 
-print("#NUM\tNAME\tMIN\tMEAN")
-run_batch(10000)
-run_batch(100000)
-run_batch(1000000)
-run_batch(10000000)
+run_all(sys.stdout)
