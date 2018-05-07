@@ -1,4 +1,5 @@
 configure_file(runner.py ${CMAKE_CURRENT_BINARY_DIR}/runner.py)
+configure_file(plot.py ${CMAKE_CURRENT_BINARY_DIR}/plot.py)
 
 configure_file(conf1.json ${CMAKE_CURRENT_BINARY_DIR}/conf1.json COPYONLY)
 

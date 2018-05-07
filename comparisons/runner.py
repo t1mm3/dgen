@@ -49,5 +49,5 @@ def run_all(f):
 	run_batch(f, 1000000)
 	run_batch(f, 10000000)
 
-
-run_all(sys.stdout)
+with open("@CMAKE_CURRENT_BINARY_DIR@/runs.txt", "w+") as f:
+	run_all(f)

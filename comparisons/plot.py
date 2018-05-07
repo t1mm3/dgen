@@ -4,8 +4,7 @@ import pandas as pd
 import numpy as np
 
 def main():
-    df = pd.read_csv('runs.txt', sep='\t', names=['NUM', 'NAME', 'MIN', 'MEAN'], skiprows=1)
-    print(df)
+    df = pd.read_csv('@CMAKE_CURRENT_BINARY_DIR@/runs.txt', sep='\t', names=['NUM', 'NAME', 'MIN', 'MEAN'], skiprows=1)
 
     fig = plt.figure()
 
@@ -27,8 +26,9 @@ def main():
         ax1.plot(dd['NUM'], dd['MIN'], label=t, linestyle='--', marker='o')
 
     leg = ax1.legend()
+    fig.savefig("@CMAKE_CURRENT_BINARY_DIR@/runs.pdf")
+    plt.close(fig)
 
-    plt.show()
 
 if __name__ == '__main__':
     main()
