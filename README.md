@@ -7,7 +7,7 @@ This benchmark compares optimized single-threaded naive implementations with dge
 
 ![Small benchmark](comparisons/runs_wc_stones02.png)
 
-Observe that single-threaded dgen is a around 3x faster than the naive implementations whereas the parallel version of dgen using 4 threads is another 2x faster while still providing a deterministic output.
+Observe that single-threaded dgen is a around 3.5x faster than the naive implementations whereas the parallel version of dgen using 4 threads is another 2x faster while still providing a deterministic output.
 
 ## Further information
 * [Data specification](SPECIFICATION.md)
