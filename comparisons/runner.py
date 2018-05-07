@@ -46,6 +46,7 @@ def run_runs_batch(f, num, wc):
 	run(f, wc, s+"\tdgen_4threads  ", ["@PROJECT_BINARY_DIR@/dgen", curr_dir + "/conf1.json", "-t", "4" ,"-n", s])
 	run(f, wc, s+"\tnaive_printf   ", [curr_dir + "csv_naive_printf", s])
 	run(f, wc, s+"\tnaive_cppstream", [curr_dir + "csv_naive_cppstream", s])
+	run(f, wc, s+"\tlut_printf     ", [curr_dir + "csv_hardcode_lut", s])
 
 def run_all_runs(f, wc):
 	f.write("#NUM\tNAME\tMIN\tMEAN\n")
@@ -63,9 +64,9 @@ def run_all_scale(f):
 with open("@CMAKE_CURRENT_BINARY_DIR@/runs_wc.txt", "w+") as f:
 	run_all_runs(f, True)
 
-with open("@CMAKE_CURRENT_BINARY_DIR@/runs_dev0.txt", "w+") as f:
-	run_all_runs(f, False)
+#with open("@CMAKE_CURRENT_BINARY_DIR@/runs_dev0.txt", "w+") as f:
+#	run_all_runs(f, False)
 
 
-with open("@CMAKE_CURRENT_BINARY_DIR@/scaling.txt", "w+") as f:
-	run_all_scale(f)
+#with open("@CMAKE_CURRENT_BINARY_DIR@/scaling.txt", "w+") as f:
+#	run_all_scale(f)
