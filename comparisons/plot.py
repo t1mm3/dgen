@@ -3,14 +3,16 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-def plot_runs():
-    df = pd.read_csv('@CMAKE_CURRENT_BINARY_DIR@/runs.txt', sep='\t', names=['NUM', 'NAME', 'MIN', 'MEAN'], skiprows=1)
+def plot_runs(wc):
+    infix = "wc" if wc else "dev0"
+    descr = '"wc -l"' if wc else "'/dev/null'"
+    df = pd.read_csv('@CMAKE_CURRENT_BINARY_DIR@/runs_' + infix + '.txt', sep='\t', names=['NUM', 'NAME', 'MIN', 'MEAN'], skiprows=1)
 
     fig = plt.figure()
 
     ax1 = fig.add_subplot(111)
 
-    ax1.set_title("CSV generation (2 integer columns)")
+    ax1.set_title("CSV generation (2 integer columns) to " + descr)
     ax1.set_xlabel('#Rows')
     ax1.set_ylabel('Time in s')
     ax1.set_xscale("log")
@@ -27,7 +29,7 @@ def plot_runs():
         ax1.plot(dd['NUM'], dd['MIN'], label=t, linestyle='--', marker='o')
 
     leg = ax1.legend()
-    fig.savefig("@CMAKE_CURRENT_BINARY_DIR@/runs.pdf")
+    fig.savefig("@CMAKE_CURRENT_BINARY_DIR@/runs_" + infix + ".pdf")
     plt.close(fig)
 
 
@@ -49,7 +51,8 @@ def plot_scalablity():
     plt.close(fig)
 
 def main():
-    plot_runs()
+    plot_runs(True)
+    plot_runs(False)
     plot_scalablity()
 
 
