@@ -42,8 +42,8 @@ def run(file, wc, name, cmds):
 def run_runs_batch(f, num, wc):
 	curr_dir = "@CMAKE_CURRENT_BINARY_DIR@/"
 	s = str(num)
-	run(f, wc, s+"\tdgen           ", ["@PROJECT_BINARY_DIR@/dgen", curr_dir + "/conf1.json", "-n", s])
-	run(f, wc, s+"\tdgen_4threads  ", ["@PROJECT_BINARY_DIR@/dgen", curr_dir + "/conf1.json", "-t", "4" ,"-n", s])
+	run(f, wc, s+"\tdgen           ", ["@PROJECT_BINARY_DIR@/src/dgen", curr_dir + "/conf1.json", "-n", s])
+	run(f, wc, s+"\tdgen_4threads  ", ["@PROJECT_BINARY_DIR@/src/dgen", curr_dir + "/conf1.json", "-t", "4" ,"-n", s])
 	run(f, wc, s+"\tnaive_printf   ", [curr_dir + "csv_naive_printf", s])
 	run(f, wc, s+"\tnaive_cppstream", [curr_dir + "csv_naive_cppstream", s])
 	run(f, wc, s+"\tlut_printf     ", [curr_dir + "csv_hardcode_lut", s])
@@ -58,7 +58,7 @@ def run_all_scale(f):
 	curr_dir = "@CMAKE_CURRENT_BINARY_DIR@/"
 	num = 100000000
 	for t in range(1, multiprocessing.cpu_count()+1):
-		run(f, True, str(t), ["@PROJECT_BINARY_DIR@/dgen", curr_dir + "/conf1.json", "-n", str(num), "-t", str(t)])
+		run(f, True, str(t), ["@PROJECT_BINARY_DIR@/src/dgen", curr_dir + "/conf1.json", "-n", str(num), "-t", str(t)])
 
 
 with open("@CMAKE_CURRENT_BINARY_DIR@/runs_wc.txt", "w+") as f:
