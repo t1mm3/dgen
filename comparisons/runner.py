@@ -37,6 +37,7 @@ def run_batch(num):
 	curr_dir = "@CMAKE_CURRENT_BINARY_DIR@/"
 	s = str(num)
 	run(s+"\tdgen           ", ["@PROJECT_BINARY_DIR@/dgen", curr_dir + "/conf1.json", "-n", s])
+	run(s+"\tdgen_4threads  ", ["@PROJECT_BINARY_DIR@/dgen", curr_dir + "/conf1.json", "-t", "4" ,"-n", s])
 	run(s+"\tnaive_printf   ", [curr_dir + "csv_naive_printf", s])
 	run(s+"\tnaive_cppstream", [curr_dir + "csv_naive_cppstream", s])
 
