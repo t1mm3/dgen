@@ -26,5 +26,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/variant-1.1.5/include
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
 
+enable_testing()
 add_subdirectory(src)
 add_subdirectory(comparisons)
