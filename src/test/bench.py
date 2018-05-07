@@ -105,3 +105,20 @@ run("""
     "output" : "stdout"
 }}
 	""".format(ints=int1024), "1024 int")
+
+
+run("""
+{{
+    "version" : "0.1",
+    "tuples" : 100000000,
+    "threads" : 1,
+    "columns" : [
+        {{ "integer" : {{ "gen" : "sequential", "min" : 10, "max" : 10000 }} }},
+        {{ "integer" : {{ "gen" : "sequential", "min" : -10, "max" : 10000 }} }}
+    ],
+    "format" : {{
+        "csv" : {{ "comma" : "|", "newline" : "\\n"}}
+    }},
+    "output" : "stdout"
+}}
+	""".format(), "2 ints")

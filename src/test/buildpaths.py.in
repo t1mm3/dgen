@@ -4,7 +4,7 @@ def getTestPath():
 	return "@TEST_PATH@"
 
 def getProjectBinPath():
-	return "@PROJECT_BINARY_DIR@"
+	return "@PROJECT_BINARY_DIR@/src"
 
 def getParallelism():
 	num = cpu_count()
