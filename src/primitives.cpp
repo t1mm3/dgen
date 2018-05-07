@@ -100,9 +100,28 @@ tgen_seq(T* R res, size_t num, int64_t start, int64_t min, int64_t max)
 	const T dom = (int64_t)max - (int64_t)min;
 	const T dmin = min;
 
-	for (size_t i=0; i<num; i++) {
+	size_t i=0;
+
+	for (; i+16<num; i+=16) {
+		int64_t k = start + i;
+		T first = (k % dom) + dmin;
+
+		// the next 16 values cannot overflow?
+		if ((int64_t)first + 16 <= max) {
+#define A(off) res[i+off] = first + dmin + off
+			A(0);A(1);A(2);A(3);A(4);A(5);A(6);A(7);A(8);A(9);A(10);A(11);A(12);A(13);A(14);A(15);
+#undef A
+		} else {
+#define A(off) k = start + i + off; res[i+off] = (k % dom) + dmin;
+			A(0);A(1);A(2);A(3);A(4);A(5);A(6);A(7);A(8);A(9);A(10);A(11);A(12);A(13);A(14);A(15);
+#undef A
+		}
+	}
+
+	while (i<num) {
 		const int64_t k = start + i;
 		res[i] = (k % dom) + dmin;
+		i++;
 	}
 }
 
