@@ -29,7 +29,7 @@ OutputQueue::~OutputQueue() {
 }
 
 void
-OutputQueue::Push(Task& t, std::string&& final)
+OutputQueue::Push(Task& t, StrBuffer&& final)
 {
 	if (m_num_threads == 1) {
 		// single threaded 

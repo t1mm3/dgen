@@ -25,7 +25,7 @@ struct CsvChecker {
 
 	void operator()();
 
-	void verify(const std::string& data, RelSpec& spec);
+	void verify(const StrBuffer& data, RelSpec& spec);
 };
 
 CsvChecker::CsvChecker(bool str = false)
@@ -58,7 +58,7 @@ CsvChecker::operator()() {
 
 	std::mutex lock;
 
-	CheckOutput outp([&] (const std::string& data) {
+	CheckOutput outp([&] (const StrBuffer& data) {
 		std::lock_guard<std::mutex> guard(lock);
 		verify(data, spec);
 	});
@@ -66,8 +66,9 @@ CsvChecker::operator()() {
 }
 
 void
-CsvChecker::verify(const std::string& data, RelSpec& spec)
+CsvChecker::verify(const StrBuffer& bufdata, RelSpec& spec)
 {
+	std::string data(bufdata.pointer());
 	std::stringstream ss(data);
 	size_t num_lines = 0;
 	int64_t prev = -1;

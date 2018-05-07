@@ -204,7 +204,7 @@ struct OutputQueue;
 
 struct DoTask {
 	void operator()(Task&& t);
-	void append_vector(std::string& out, size_t start, size_t num, const RelSpec& rel);
+	void append_vector(StrBuffer& out, size_t start, size_t num, const RelSpec& rel);
 };
 
 static void
@@ -288,7 +288,7 @@ gen_col(const ColType& ctype, const ColSpec& col, size_t colid, size_t start,
 
 
 NO_INLINE void
-DoTask::append_vector(std::string& out, size_t start, size_t num, const RelSpec& rel)
+DoTask::append_vector(StrBuffer& out, size_t start, size_t num, const RelSpec& rel)
 {
 	size_t num_cols = rel.cols.size();
 	{
@@ -313,11 +313,16 @@ DoTask::append_vector(std::string& out, size_t start, size_t num, const RelSpec&
 	}
 
 	// calculate positions
-	size_t size = calc_positions(0, num, num_cols, &state.cols[0],
+	size_t size = calc_positions(out.used, num, num_cols, &state.cols[0],
 		rel.GetSepLen(false), rel.GetSepLen(true));
-	out.resize(size);
 
-	char* dst = (char*)out.c_str();
+	if (out.capacity() < size) {
+		out.resize(size);
+	}
+
+	out.used = size;
+
+	char* dst = (char*)out.pointer();
 
 	// copy strings to final location
 	for (size_t c = 0; c < num_cols; c++) {
@@ -340,18 +345,15 @@ DoTask::operator()(Task&& t)
 
 	size_t off = t.start;
 
-	std::string final;
-	final.reserve(1024*1024*10);
+	StrBuffer final;
+	final.init(1024*1024*10);
 
 	while (off < t.end) {
 		size_t num = std::min(g_vector_size, t.end - off);
 
 		assert(t.rel);
 
-		std::string tmp;
-		append_vector(tmp, off, num, *t.rel);
-
-		final += tmp;
+		append_vector(final, off, num, *t.rel);
 
 		off += num;
 	}

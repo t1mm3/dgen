@@ -2,20 +2,20 @@
 
 #include <iostream>
 
-void CoutOutput::operator()(std::string&& data)
+void CoutOutput::operator()(StrBuffer&& data)
 {
-	std::cout << std::move(data);
+	std::cout.write(&data.data[0], data.used);
 }
 
 
-CheckOutput::CheckOutput(std::function<void(std::string&&)> check)
+CheckOutput::CheckOutput(std::function<void(StrBuffer&&)> check)
  : check(check)
 {
 }
 
 
 void
-CheckOutput::operator()(std::string&& data)
+CheckOutput::operator()(StrBuffer&& data)
 {
 	check(std::move(data));
 }

@@ -10,7 +10,7 @@ struct Task;
 
 struct OutputQueue {
 private:
-	std::vector<std::string> m_queue;
+	std::vector<StrBuffer> m_queue;
 	std::atomic<bool>* m_used;
 	std::atomic<size_t> m_read_pos;
 	Output& m_out;
@@ -24,9 +24,9 @@ public:
 
 	~OutputQueue();
 
-	void Push(Task& t, std::string&& final);
+	void Push(Task& t, StrBuffer&& final);
 
-	void operator()(Task& t, std::string&& final) {
+	void operator()(Task& t, StrBuffer&& final) {
 		Push(t, std::move(final));
 	}
 };
