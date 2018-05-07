@@ -7,6 +7,7 @@ set(TEST_PATH "${CMAKE_CURRENT_BINARY_DIR}/")
 configure_file(buildpaths.py.in ${CMAKE_CURRENT_BINARY_DIR}/buildpaths.py)
 configure_file(buildpaths.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/test_buildpaths.cpp)
 add_library(libtestdgen STATIC ${CMAKE_CURRENT_BINARY_DIR}/test_buildpaths.cpp)
+add_dependencies(libtestdgen dgen)
 
 # copy files
 configure_file(words1.txt ${TEST_PATH}/words1.txt COPYONLY)
