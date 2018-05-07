@@ -97,7 +97,7 @@ NO_INLINE void
 tgen_seq(T* R res, size_t num, int64_t start, int64_t min, int64_t max)
 {
 	assert(max >= min);
-	const size_t dom = (int64_t)max - (int64_t)min;
+	const T dom = (int64_t)max - (int64_t)min;
 	const T dmin = min;
 
 	for (size_t i=0; i<num; i++) {
