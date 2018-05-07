@@ -3,9 +3,10 @@
 
 #include <iostream>
 #include <random>
+#include <cstdlib>
 
 template<bool cpp_stream, bool sequential>
-void csv_naive()
+void csv_naive(size_t card)
 {
 	std::ios_base::sync_with_stdio(false);
 	int64_t seed = 1;
@@ -19,7 +20,7 @@ void csv_naive()
 	const int64_t dom1 = 10000-10;
 	const int64_t dom2 = 10000+10;
 
-	for (size_t i=0; i<1000000; i++) {
+	for (size_t i=0; i<card; i++) {
 		int16_t col1, col2;
 		if (sequential) {
 			col1 = (i % dom1) + 10;
