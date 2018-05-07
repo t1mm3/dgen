@@ -50,7 +50,7 @@ def run_runs_batch(f, num, wc):
 
 def run_all_runs(f, wc):
 	f.write("#NUM\tNAME\tMIN\tMEAN\n")
-	for order in range(5, 10):
+	for order in range(5, 9):
 		run_runs_batch(f, 10**order, wc)	
 
 def run_all_scale(f):
