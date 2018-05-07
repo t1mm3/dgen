@@ -31,16 +31,17 @@ def runN_wc(n, cmds):
 
 def run(name, cmds):
 	times = runN_wc(10, cmds)
-	print("{name}\t{time}".format(name=name, time=min(times)))
+	print("{0}\t{1:10.2f} \t{2:10.2f} ".format(name, min(times), sum(times)/len(times)))
 
 def run_batch(num):
 	curr_dir = "@CMAKE_CURRENT_BINARY_DIR@/"
 	s = str(num)
-	run(s+"\tdgen", ["@PROJECT_BINARY_DIR@/dgen", curr_dir + "/conf1.json", "-n", s])
-	run(s+"\tnaive_printf", [curr_dir + "csv_naive_printf", s])
+	run(s+"\tdgen           ", ["@PROJECT_BINARY_DIR@/dgen", curr_dir + "/conf1.json", "-n", s])
+	run(s+"\tnaive_printf   ", [curr_dir + "csv_naive_printf", s])
 	run(s+"\tnaive_cppstream", [curr_dir + "csv_naive_cppstream", s])
 
 
+print("#NUM\tNAME\tMIN\tMEAN")
 run_batch(10000)
 run_batch(100000)
 run_batch(1000000)
