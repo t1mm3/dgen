@@ -9,7 +9,7 @@ This benchmark compares optimized single-threaded naive implementations with dge
 
 Observe that single-threaded dgen is a around 2x faster than the naive implementations whereas the parallel version of dgen using 4 threads is another 4x faster while still providing a deterministic output.
 
-For 1 billion records and two integers per record, dgen achieves a throughput around 16 M records/s using a single thread. Using 4 threads the throuhput increases to 50M records/s.
+For 1 billion records and two integers per record, dgen achieves a throughput around 16M records/s using a single thread. Using 4 threads the throuhput increases to 50M records/s.
 
 ## Further information
 * [Data specification](SPECIFICATION.md)
