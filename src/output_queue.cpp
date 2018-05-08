@@ -8,23 +8,57 @@ OutputQueue::OutputQueue(size_t capacity, size_t num_threads, Output& out)
 	assert(capacity > 0);
 	assert(num_threads > 0);
 
+	m_writer = nullptr;
+	m_buffer = nullptr;
+	m_buffer_capacity = 0;
+
 	if (num_threads > 1) {
 		m_todo = capacity;
-		m_queue.resize(capacity);
-		m_used = new std::atomic<bool>[capacity];
+		m_buffer_capacity = capacity;
+		m_buffer = new std::atomic<StrBuffer*>[capacity];
 		for (size_t i=0; i<capacity; i++) {
-			m_used[i] = false;
+			m_buffer[i] = nullptr;
 		}
 		m_read_pos = 0;
+
+		m_writer = new std::thread(&OutputQueue::writer, this);
+	}
+}
+
+void
+OutputQueue::writer()
+{
+	while (m_read_pos < m_buffer_capacity) {
+		size_t id = 0;
+		m_flushq.wait_dequeue(id);
+
+		for (size_t i=m_read_pos.load(); i<m_buffer_capacity; i++) {
+			auto pbuf = m_buffer[i].load();
+			if (!pbuf) {
+				break;
+			}
+			auto& buf = *pbuf;
+
+			m_out(buf);
+			dealloc(buf);
+			m_read_pos++;
+		}
 	}
 }
 
 OutputQueue::~OutputQueue() {
+	if (m_writer) {
+		m_writer->join();
+		delete m_writer;
+	}
+
 	if (m_num_threads > 1) {
 		// flush
 		assert(m_read_pos == m_queue.size());
+	}
 
-		delete[] m_used;
+	if (m_buffer) {
+		delete[] m_buffer;
 	}
 }
 
@@ -40,63 +74,28 @@ OutputQueue::Push(Task& t, StrBuffer& final)
 
 	auto id = t.taskId;
 	assert(id >= 0);
-	assert(id <= m_queue.capacity());
-
-	// copy
-	m_queue[id] = &final;
+	assert(id < m_buffer_capacity);
 
 	// commit
-	bool bfalse = false;
-	bool succeeded = m_used[id].compare_exchange_strong(bfalse, true);
+	StrBuffer* buf0 = nullptr;
+	bool succeeded = m_buffer[id].compare_exchange_strong(buf0, &final);
 	assert(succeeded);
 
 	if (!succeeded) {
 		throw std::bad_alloc();
 	}
 
-	// scan previous work & output if nobody did
-	bool ordered = true;
-	for (auto i = m_read_pos.load(); i <= id; i++) {
-		ordered &= m_used[i].load();
-	}
-
-	bool last = --m_todo == 0;
-
-	if (ordered || last) {
-		flush(id, last);
-	}
-}
-
-void
-OutputQueue::flush(size_t npos, bool force)
-{
-	auto write = [&] () {
-		size_t i;
-		for (i = m_read_pos; i < m_queue.size() && m_used[i].load(); i++) {
-			auto& buf = m_queue[i];
-			assert(buf);
-			m_out(*buf);
-			dealloc(*buf);
-			m_read_pos++;
-		}
-
-		assert(i >= npos);
-	};
-
-	if (force) {
-		std::lock_guard<std::mutex> lock(m_print_lock);
-		write();
-	} else {
-		if (m_print_lock.try_lock()) {
-			try {
-				write();
-				m_print_lock.unlock();
-			} catch (...) {
-				m_print_lock.unlock();
-				throw;
+	if (--m_todo > 0) {
+		// scan previous work & output if nobody did
+		for (auto i = m_read_pos.load(); i <= id; i++) {
+			if (!m_buffer[i].load()) {
+				// not ordered cannot flush
+				return;
 			}
 		}
 	}
+
+	m_flushq.enqueue(id);
 }
 
 void

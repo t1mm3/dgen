@@ -5,21 +5,24 @@
 #include <mutex>
 #include <vector>
 #include "outputs.hpp"
+#include "blockingconcurrentqueue.h"
+#include <thread>
 
 struct Task;
 
 struct OutputQueue {
 private:
-	std::vector<StrBuffer*> m_queue;
-	std::atomic<bool>* m_used;
+	std::atomic<StrBuffer*>* m_buffer;
 	std::atomic<size_t> m_read_pos;
+	size_t m_buffer_capacity;
 	Output& m_out;
-	std::mutex m_print_lock;
 	const size_t m_num_threads;
 	std::atomic<int64_t> m_todo;
+	std::thread* m_writer;
 
+	moodycamel::BlockingConcurrentQueue<size_t> m_flushq;
+	void writer();
 	void dealloc(StrBuffer& buf);
-	void flush(size_t npos, bool force);
 public:
 	OutputQueue(size_t capacity, size_t num_threads, Output& out);
 
