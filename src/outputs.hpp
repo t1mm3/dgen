@@ -11,9 +11,9 @@ private:
 	size_t m_used = 0;
 	StrBufferPool* m_owner = nullptr;
 
+	friend class StrBufferPool;
+	void init(size_t bytes);
 public:
-	void Init(size_t bytes);
-
 	size_t Capacity() const {
 		return m_data.capacity();
 	}
@@ -55,7 +55,7 @@ public:
 
 	~StrBufferPool();
 
-	StrBuffer* Get();
+	StrBuffer* Get(size_t bytes);
 
 	void Push(StrBuffer& b);
 };

@@ -346,10 +346,8 @@ DoTask::operator()(Task&& t)
 	size_t off = t.start;
 
 	assert(t.strbuf_pool);
-	StrBuffer* final = t.strbuf_pool->Get();
+	StrBuffer* final = t.strbuf_pool->Get(1024*1024*10);
 	assert(final);
-
-	final->Init(1024*1024*10);
 
 	while (off < t.end) {
 		size_t num = std::min(g_vector_size, t.end - off);

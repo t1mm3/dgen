@@ -4,7 +4,7 @@
 #include <cassert>
 
 void
-StrBuffer::Init(size_t bytes)
+StrBuffer::init(size_t bytes)
 {
 	assert(m_owner);
 	m_data.reserve(bytes);
@@ -47,11 +47,12 @@ StrBufferPool::~StrBufferPool()
 }
 
 StrBuffer*
-StrBufferPool::Get()
+StrBufferPool::Get(size_t bytes)
 {
 	StrBuffer* b = nullptr;
 	m_queue.wait_dequeue(b);
 	assert(b);
+	b->init(bytes);
 	return b;
 }
 
