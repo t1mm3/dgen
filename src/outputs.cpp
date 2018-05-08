@@ -6,7 +6,7 @@
 void
 StrBuffer::Init(size_t bytes)
 {
-	assert(owner);
+	assert(m_owner);
 	m_data.reserve(bytes);
 	m_used = 0;
 }
