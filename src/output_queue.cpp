@@ -60,26 +60,43 @@ OutputQueue::Push(Task& t, StrBuffer& final)
 		ordered &= m_used[i].load();
 	}
 
-	if (ordered || --m_todo == 0) {
-		flush(id);
+	bool last = --m_todo == 0;
+
+	if (ordered || last) {
+		flush(id, last);
 	}
 }
 
 void
-OutputQueue::flush(size_t npos)
+OutputQueue::flush(size_t npos, bool force)
 {
-	std::lock_guard<std::mutex> lock(m_print_lock);
+	auto write = [&] () {
+		size_t i;
+		for (i = m_read_pos; i < m_queue.size() && m_used[i].load(); i++) {
+			auto& buf = m_queue[i];
+			assert(buf);
+			m_out(*buf);
+			dealloc(*buf);
+			m_read_pos++;
+		}
 
-	size_t i;
-	for (i = m_read_pos; i < m_queue.size() && m_used[i].load(); i++) {
-		auto& buf = m_queue[i];
-		assert(buf);
-		m_out(*buf);
-		dealloc(*buf);
-		m_read_pos++;
+		assert(i >= npos);
+	};
+
+	if (force) {
+		std::lock_guard<std::mutex> lock(m_print_lock);
+		write();
+	} else {
+		if (m_print_lock.try_lock()) {
+			try {
+				write();
+				m_print_lock.unlock();
+			} catch (...) {
+				m_print_lock.unlock();
+				throw;
+			}
+		}
 	}
-
-	assert(i >= npos);
 }
 
 void

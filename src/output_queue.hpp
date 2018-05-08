@@ -19,7 +19,7 @@ private:
 	std::atomic<int64_t> m_todo;
 
 	void dealloc(StrBuffer& buf);
-	void flush(size_t npos);
+	void flush(size_t npos, bool force);
 public:
 	OutputQueue(size_t capacity, size_t num_threads, Output& out);
 
