@@ -345,20 +345,23 @@ DoTask::operator()(Task&& t)
 
 	size_t off = t.start;
 
-	StrBuffer final;
-	final.init(1024*1024*10);
+	assert(t.strbuf_pool);
+	StrBuffer* final = t.strbuf_pool->Get();
+	assert(final);
+
+	final->init(1024*1024*10);
 
 	while (off < t.end) {
 		size_t num = std::min(g_vector_size, t.end - off);
 
 		assert(t.rel);
 
-		append_vector(final, off, num, *t.rel);
+		append_vector(*final, off, num, *t.rel);
 
 		off += num;
 	}
 
-	(*t.outp)(t, std::move(final));
+	(*t.outp)(t, *final);
 }
 
 NO_INLINE void
@@ -401,12 +404,14 @@ generate(RelSpec& spec, Output& out)
 	size_t num_chunks = (todo + g_chunk_size - 1) / g_chunk_size;
 
 	auto output_queue = std::make_unique<OutputQueue>(num_chunks, num_threads, out);
+	auto buffer_queue = std::make_unique<StrBufferPool>(num_threads * 3);
+
 	ThreadPool<Task, DoTask> g_pool(num_threads);
 
 	while (todo > 0) {
 		const size_t num = std::min(g_chunk_size, todo);
 
-		g_pool.Push(Task {offset, offset + num, &spec, output_queue.get(), chunkId});
+		g_pool.Push(Task {offset, offset + num, &spec, output_queue.get(), buffer_queue.get(), chunkId});
 
 		chunkId++;
 		todo -= num;

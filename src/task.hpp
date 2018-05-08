@@ -5,6 +5,7 @@
 
 struct RelSpec;
 struct OutputQueue;
+struct StrBufferPool;
 
 struct Task {
 	size_t start;
@@ -12,6 +13,7 @@ struct Task {
 
 	RelSpec* rel;
 	OutputQueue* outp;
+	StrBufferPool* strbuf_pool;
 	size_t taskId;
 };
 

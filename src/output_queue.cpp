@@ -29,11 +29,12 @@ OutputQueue::~OutputQueue() {
 }
 
 void
-OutputQueue::Push(Task& t, StrBuffer&& final)
+OutputQueue::Push(Task& t, StrBuffer& final)
 {
 	if (m_num_threads == 1) {
 		// single threaded 
-		m_out(std::move(final));
+		m_out(final);
+		dealloc(final);
 		return;
 	}
 
@@ -42,7 +43,7 @@ OutputQueue::Push(Task& t, StrBuffer&& final)
 	assert(id <= m_queue.capacity());
 
 	// copy
-	m_queue[id] = std::move(final);
+	m_queue[id] = &final;
 
 	// commit
 	bool bfalse = false;
@@ -71,9 +72,20 @@ OutputQueue::flush(size_t npos)
 
 	size_t i;
 	for (i = m_read_pos; i < m_queue.size() && m_used[i].load(); i++) {
-		m_out(std::move(m_queue[i]));
+		auto& buf = m_queue[i];
+		assert(buf);
+		m_out(*buf);
+		dealloc(*buf);
 		m_read_pos++;
 	}
 
 	assert(i >= npos);
+}
+
+void
+OutputQueue::dealloc(StrBuffer& buf)
+{
+	auto pool = buf.owner;
+	assert(pool);
+	pool->Push(buf);
 }
