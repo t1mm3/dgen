@@ -361,6 +361,11 @@ DoTask::operator()(Task&& t)
 		off += num;
 	}
 
+	// terminate with 0
+	char* dst = final->Pointer() + final->GetWritePos();
+	*dst = 0;
+
+	// hand over to output
 	(*t.outp)(t, *final);
 }
 
