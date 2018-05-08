@@ -313,16 +313,16 @@ DoTask::append_vector(StrBuffer& out, size_t start, size_t num, const RelSpec& r
 	}
 
 	// calculate positions
-	size_t size = calc_positions(out.used, num, num_cols, &state.cols[0],
+	size_t size = calc_positions(out.GetWritePos(), num, num_cols, &state.cols[0],
 		rel.GetSepLen(false), rel.GetSepLen(true));
 
-	if (out.capacity() < size) {
-		out.resize(size);
+	if (out.Capacity() < size) {
+		out.Resize(size);
 	}
 
-	out.used = size;
+	out.SetWritePos(size);
 
-	char* dst = (char*)out.pointer();
+	char* dst = (char*)out.Pointer();
 
 	// copy strings to final location
 	for (size_t c = 0; c < num_cols; c++) {
@@ -349,7 +349,7 @@ DoTask::operator()(Task&& t)
 	StrBuffer* final = t.strbuf_pool->Get();
 	assert(final);
 
-	final->init(1024*1024*10);
+	final->Init(1024*1024*10);
 
 	while (off < t.end) {
 		size_t num = std::min(g_vector_size, t.end - off);

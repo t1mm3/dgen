@@ -68,7 +68,7 @@ CsvChecker::operator()() {
 void
 CsvChecker::verify(const StrBuffer& bufdata, RelSpec& spec)
 {
-	std::string data(bufdata.pointer());
+	std::string data(bufdata.Pointer());
 	std::stringstream ss(data);
 	size_t num_lines = 0;
 	int64_t prev = -1;

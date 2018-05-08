@@ -6,24 +6,38 @@
 struct StrBufferPool;
 
 struct StrBuffer {
-	std::vector<char> data;
-	size_t used = 0;
-	StrBufferPool* owner = nullptr;
+private:
+	std::vector<char> m_data;
+	size_t m_used = 0;
+	StrBufferPool* m_owner = nullptr;
 
-	void init(size_t bytes);
+public:
+	void Init(size_t bytes);
 
-	size_t capacity() const {
-		return data.capacity();
+	size_t Capacity() const {
+		return m_data.capacity();
 	}
 
-	void resize(size_t bytes);
+	void Resize(size_t bytes);
 
-	char* pointer() {
-		return &data[0];
+	char* Pointer() {
+		return &m_data[0];
 	}
 
-	const char* pointer() const {
-		return &data[0];
+	const char* Pointer() const {
+		return &m_data[0];
+	}
+
+	StrBufferPool* Owner() {
+		return m_owner;
+	}
+
+	size_t GetWritePos() const {
+		return m_used;
+	}
+
+	void SetWritePos(size_t n) {
+		m_used = n;
 	}
 
 	StrBuffer(StrBufferPool* owner = nullptr);
@@ -32,9 +46,11 @@ struct StrBuffer {
 #include "blockingconcurrentqueue.h"
 
 struct StrBufferPool {
+private:
 	moodycamel::BlockingConcurrentQueue<StrBuffer*> m_queue;
 	const size_t capacity;
 
+public:
 	StrBufferPool(size_t init);
 
 	~StrBufferPool();

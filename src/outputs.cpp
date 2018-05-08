@@ -4,21 +4,25 @@
 #include <cassert>
 
 void
-StrBuffer::init(size_t bytes)
+StrBuffer::Init(size_t bytes)
 {
 	assert(owner);
-	data.reserve(bytes);
-	used = 0;
+	m_data.reserve(bytes);
+	m_used = 0;
 }
 
 void
-StrBuffer::resize(size_t bytes)
+StrBuffer::Resize(size_t bytes)
 {
-	data.resize(bytes);
+	if (bytes <= Capacity()) {
+		return;
+	}
+
+	m_data.resize(bytes);
 }
 
 StrBuffer::StrBuffer(StrBufferPool* owner)
- : owner(owner) {
+ : m_owner(owner) {
 
 }
 
@@ -60,7 +64,7 @@ StrBufferPool::Push(StrBuffer& b)
 
 void CoutOutput::operator()(const StrBuffer& data)
 {
-	std::cout.write(&data.data[0], data.used);
+	std::cout.write(data.Pointer(), data.GetWritePos());
 }
 
 

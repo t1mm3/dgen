@@ -85,7 +85,7 @@ OutputQueue::flush(size_t npos)
 void
 OutputQueue::dealloc(StrBuffer& buf)
 {
-	auto pool = buf.owner;
+	auto pool = buf.Owner();
 	assert(pool);
 	pool->Push(buf);
 }
