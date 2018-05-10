@@ -266,6 +266,15 @@ gen_col(const ColType& ctype, const ColSpec& col, size_t colid, size_t start,
 				},
 				[&] (Poisson& gpoisson) {
 					gen_poisson(a, num, start, cint.min, cint.max, gpoisson.mean, scol.res_type);
+				},
+				[&] (Binomial& gbin) {
+					gen_binomial(a, num, start, cint.min, cint.max, gbin.t, gbin.p, scol.res_type);
+				},
+				[&] (NegBinomial& gbin) {
+					gen_neg_binomial(a, num, start, cint.min, cint.max, gbin.k, gbin.p, scol.res_type);
+				},
+				[&] (Geometric& ggeometric) {
+					gen_geometric(a, num, start, cint.min, cint.max, ggeometric.p, scol.res_type);
 				}
 			);
 

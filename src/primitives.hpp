@@ -13,6 +13,19 @@ gen_poisson(int64_t* res, size_t num, int64_t seed, int64_t min,
 	int64_t max, double mean, BaseType t);
 
 void
+gen_binomial(int64_t* res, size_t num, int64_t seed, int64_t min,
+	int64_t max, int64_t p_t, double p, BaseType t);
+
+void
+gen_neg_binomial(int64_t* res, size_t num, int64_t seed, int64_t min,
+	int64_t max, int64_t k, double p, BaseType t);
+
+void
+gen_geometric(int64_t* res, size_t num, int64_t seed, int64_t min,
+	int64_t max, double p, BaseType t);
+
+
+void
 gen_seq(int64_t* res, size_t num, int64_t start, int64_t min,
 	int64_t max, BaseType t);
 

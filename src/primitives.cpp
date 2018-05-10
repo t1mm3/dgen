@@ -92,6 +92,122 @@ gen_poisson(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max,
 	}
 }
 
+
+template<typename T>
+NO_INLINE void
+tgen_geometric(T* R res, size_t num, int64_t seed, int64_t min,
+	int64_t max, double p)
+{
+	std::mt19937 rng(seed);
+	std::geometric_distribution<T> uni(p);
+	int64_t dom = max - min;
+
+	for (size_t i=0; i<num; i++) {
+		auto k = uni(rng);
+		res[i] = (k % dom) + min;
+	}
+}
+
+NO_INLINE void
+gen_geometric(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max,
+	double p, BaseType t)
+{
+	switch (t) {
+#define A(C, B) case B: tgen_geometric<C>((C*)res, num, seed, min, max, p); break;
+	A(int8_t, I8);
+	A(uint8_t, U8);
+
+	A(int16_t, I16);
+	A(uint16_t, U16);
+
+	A(int32_t, I32);
+	A(uint32_t, U32);
+
+	A(int64_t, I64);
+
+#undef A
+	default:
+		assert(false);
+	}
+}
+
+
+template<typename T>
+NO_INLINE void
+tgen_binomial(T* R res, size_t num, int64_t seed, int64_t min,
+	int64_t max, int64_t t, double p)
+{
+	std::mt19937 rng(seed);
+	std::binomial_distribution<T> uni(t, p);
+	int64_t dom = max - min;
+
+	for (size_t i=0; i<num; i++) {
+		auto k = uni(rng);
+		res[i] = (k % dom) + min;
+	}
+}
+
+NO_INLINE void
+gen_binomial(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max,
+	int64_t pt, double p, BaseType t)
+{
+	switch (t) {
+#define A(C, B) case B: tgen_binomial<C>((C*)res, num, seed, min, max, pt, p); break;
+	A(int8_t, I8);
+	A(uint8_t, U8);
+
+	A(int16_t, I16);
+	A(uint16_t, U16);
+
+	A(int32_t, I32);
+	A(uint32_t, U32);
+
+	A(int64_t, I64);
+
+#undef A
+	default:
+		assert(false);
+	}
+}
+
+template<typename T>
+NO_INLINE void
+tgen_neg_binomial(T* R res, size_t num, int64_t seed, int64_t min,
+	int64_t max, int64_t t, double p)
+{
+	std::mt19937 rng(seed);
+	std::negative_binomial_distribution<T> uni(t, p);
+	int64_t dom = max - min;
+
+	for (size_t i=0; i<num; i++) {
+		auto k = uni(rng);
+		res[i] = (k % dom) + min;
+	}
+}
+
+NO_INLINE void
+gen_neg_binomial(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max,
+	int64_t pt, double p, BaseType t)
+{
+	switch (t) {
+#define A(C, B) case B: tgen_neg_binomial<C>((C*)res, num, seed, min, max, pt, p); break;
+	A(int8_t, I8);
+	A(uint8_t, U8);
+
+	A(int16_t, I16);
+	A(uint16_t, U16);
+
+	A(int32_t, I32);
+	A(uint32_t, U32);
+
+	A(int64_t, I64);
+
+#undef A
+	default:
+		assert(false);
+	}
+}
+
 template<typename T>
 NO_INLINE void
 tgen_seq(T* R res, size_t num, int64_t start, int64_t min, int64_t max)
