@@ -105,6 +105,21 @@ parse_integer(pt::ptree& node)
 				matches++;
 			}
 
+			if (t.second.data() == "geometric") {
+				r.cgen = Geometric {};
+				matches++;
+			}
+
+			if (t.second.data() == "binomial") {
+				r.cgen = Binomial {};
+				matches++;
+			}
+
+			if (t.second.data() == "negbinomial") {
+				r.cgen = NegBinomial {};
+				matches++;
+			}
+
 			for (pt::ptree::value_type &i : t.second) {
 				if (i.first == "uniform" || i.first == "random") {
 					r.cgen = Uniform {};
@@ -119,6 +134,35 @@ parse_integer(pt::ptree& node)
 
 					auto p = Poisson {};
 					p.mean = i.second.get<double>("mean", p.mean);
+					r.cgen = p;
+
+					matches++;
+				}
+				if (i.first == "geometric") {
+					auto n = i.second;
+
+					auto p = Geometric {};
+					p.p = i.second.get<double>("p", p.p);
+					r.cgen = p;
+
+					matches++;
+				}
+				if (i.first == "binomial") {
+					auto n = i.second;
+
+					auto p = Binomial {};
+					p.p = i.second.get<double>("p", p.p);
+					p.t = i.second.get<int64_t>("t", p.t);
+					r.cgen = p;
+
+					matches++;
+				}
+				if (i.first == "negbinomial") {
+					auto n = i.second;
+
+					auto p = NegBinomial {};
+					p.p = i.second.get<double>("p", p.p);
+					p.k = i.second.get<int64_t>("k", p.k);
 					r.cgen = p;
 
 					matches++;
