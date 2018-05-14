@@ -119,6 +119,10 @@ parse_integer(pt::ptree& node)
 				r.cgen = NegBinomial {};
 				matches++;
 			}
+			if (t.second.data() == "zipf") {
+				r.cgen = Zipf {};
+				matches++;
+			}
 
 			for (pt::ptree::value_type &i : t.second) {
 				if (i.first == "uniform" || i.first == "random") {
@@ -163,6 +167,15 @@ parse_integer(pt::ptree& node)
 					auto p = NegBinomial {};
 					p.p = i.second.get<double>("p", p.p);
 					p.k = i.second.get<int64_t>("k", p.k);
+					r.cgen = p;
+
+					matches++;
+				}
+				if (i.first == "zipf") {
+					auto n = i.second;
+
+					auto p = Zipf {};
+					p.alpha = i.second.get<double>("alpha", p.alpha);
 					r.cgen = p;
 
 					matches++;

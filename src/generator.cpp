@@ -275,6 +275,9 @@ gen_col(const ColType& ctype, const ColSpec& col, size_t colid, size_t start,
 				},
 				[&] (Geometric& ggeometric) {
 					gen_geometric(a, num, start, cint.min, cint.max, ggeometric.p, scol.res_type);
+				},
+				[&] (Zipf& gzipf) {
+					gen_zipf(a, num, start, cint.min, cint.max, gzipf.alpha, scol.res_type);
 				}
 			);
 

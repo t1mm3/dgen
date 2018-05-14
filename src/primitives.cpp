@@ -134,6 +134,71 @@ gen_geometric(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max
 
 template<typename T>
 NO_INLINE void
+tgen_zipf(T* R res, size_t num, int64_t seed, int64_t min,
+	int64_t max, double alpha)
+{
+	// inspred by: http://www.csee.usf.edu/~kchriste/tools/genzipf.c
+
+	std::mt19937 rng(seed);
+	std::uniform_real_distribution<double> uni(0.0, 1.0);
+	int64_t dom = max - min;
+	int64_t zipf_dom = dom + 1; // allow 0
+	int64_t i, k;
+	double c = 0.0, z, sum_prob;
+
+	// Compute normalization constant
+	for (i=1; i<=zipf_dom; i++) {
+		c = c + (1.0 / pow((double) i, alpha));
+	}
+	c = 1.0 / c;
+
+
+	for (size_t i=0; i<num; i++) {
+		double z;
+		do {
+			z = uni(rng);
+		} while (z == 0 || z == 1);
+
+		sum_prob = 0.0;
+		for (k=1; k<zipf_dom; k++) {
+			sum_prob += c / pow((double) i, alpha);
+			if (sum_prob >= z) {
+				res[i] = i;
+				break;
+			}
+		}
+		assert(res[i] >= 1);
+		assert(res[i] <= zipf_dom);
+
+		res[i] += min - 1;
+	}
+}
+
+NO_INLINE void
+gen_zipf(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max,
+	double p, BaseType t)
+{
+	switch (t) {
+#define A(C, B) case B: tgen_zipf<C>((C*)res, num, seed, min, max, p); break;
+	A(int8_t, I8);
+	A(uint8_t, U8);
+
+	A(int16_t, I16);
+	A(uint16_t, U16);
+
+	A(int32_t, I32);
+	A(uint32_t, U32);
+
+	A(int64_t, I64);
+
+#undef A
+	default:
+		assert(false);
+	}
+}
+
+template<typename T>
+NO_INLINE void
 tgen_binomial(T* R res, size_t num, int64_t seed, int64_t min,
 	int64_t max, int64_t t, double p)
 {

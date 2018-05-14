@@ -16,8 +16,9 @@ struct Poisson { double mean = 1.0; };
 struct Binomial { int64_t t = 1; double p = 0.5; };
 struct NegBinomial { int64_t k = 1; double p = 0.5; };
 struct Geometric { double p = 0.5; };
+struct Zipf { double alpha = 0.5; };
 
-using ColGenType = variant<Uniform, Sequential, Poisson, Binomial, NegBinomial, Geometric>;
+using ColGenType = variant<Uniform, Sequential, Poisson, Binomial, NegBinomial, Geometric, Zipf>;
 
 
 struct Integer {
