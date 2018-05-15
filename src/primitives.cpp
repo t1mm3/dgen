@@ -132,6 +132,61 @@ gen_geometric(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max
 }
 
 
+NO_INLINE size_t
+tgen_zipf_uniform_1_or_0(int* R out, size_t num, double* R pred, int* R sel)
+{
+	size_t res = 0;
+	VectorExec(sel, num, [&] (auto m) {
+		out[res] = m;
+		res += (pred[m] == 0) | (pred[m] == 1);
+	});
+	return res;
+}
+
+NO_INLINE void
+tgen_zipf_uniform(double* R res, size_t num, int64_t seed, int* R tmp)
+{
+	std::mt19937 rng(seed);
+	std::uniform_real_distribution<double> uni(0.0, 1.0);
+
+	int* R sel = nullptr;
+
+	do {
+		VectorExec(sel, num, [&] (auto m) {
+			res[m] = uni(rng);
+		});
+
+		num = tgen_zipf_uniform_1_or_0(tmp, num, res, sel);
+		sel = tmp;
+	} while (num > 0);
+}
+
+template<typename T>
+NO_INLINE void
+tgen_zipf_round(T* R res, double* R sum_prob, double* R old_sum_prob,
+	double* R z, double alpha, double c, int64_t k,
+	int* R sel, size_t num)
+{
+	const double add = c / pow((double)k, alpha);
+
+	VectorExec(sel, num, [&] (auto m) {
+		sum_prob[m] = old_sum_prob[m] + add;
+		res[m] = k;
+	});
+}
+
+NO_INLINE size_t
+tgen_zipf_round_sel(int* R out, double* R sum_prob, double* R z,
+	int* R sel, size_t num)
+{
+	size_t res = 0;
+	VectorExec(sel, num, [&] (auto m) {
+		out[res] = m;
+		res += (sum_prob[m] < z[m]);
+	});
+	return res;
+}
+
 template<typename T>
 NO_INLINE void
 tgen_zipf(T* R res, size_t num, int64_t seed, int64_t min,
@@ -139,8 +194,6 @@ tgen_zipf(T* R res, size_t num, int64_t seed, int64_t min,
 {
 	// inspred by: http://www.csee.usf.edu/~kchriste/tools/genzipf.c
 
-	std::mt19937 rng(seed);
-	std::uniform_real_distribution<double> uni(0.0, 1.0);
 	int64_t dom = max - min;
 	int64_t zipf_dom = dom + 1; // allow 0
 	int64_t i, k;
@@ -152,26 +205,55 @@ tgen_zipf(T* R res, size_t num, int64_t seed, int64_t min,
 	}
 	c = 1.0 / c;
 
+	int sel1[1024];	
+	double vsum_prob[1024];
+	double vz[1024];
+
+	tgen_zipf_uniform(&vz[0], num, seed, &sel1[0]);
 
 	for (size_t i=0; i<num; i++) {
+		vsum_prob[i] = 0.0;
+	}
+
+	int* sel = nullptr;
+	for (k=1; k<zipf_dom; k++) {
+		tgen_zipf_round(res, &vsum_prob[0], &vsum_prob[0], &vz[0], alpha, c, k, sel, num);
+		num = tgen_zipf_round_sel(&sel1[0], &vsum_prob[0], &vz[0], sel, num);
+		sel = &sel1[0];
+	}
+
+	// Check and adapt domains
+	for (size_t i=0; i<num; i++) {
+		assert(res[i] >= 1);
+		assert(res[i] <= zipf_dom);
+		res[i] += min - 1;
+	}
+
+#if 0
+	for (size_t i=0; i<num; i++) {
+// done
 		double z;
 		do {
 			z = uni(rng);
 		} while (z == 0 || z == 1);
 
-		sum_prob = 0.0;
-		for (k=1; k<zipf_dom; k++) {
-			sum_prob += c / pow((double) i, alpha);
+// todo
+		sum_prob = 0.0; //
+		for (k=1; k<zipf_dom; k++) { //
+			sum_prob += c / pow((double) k, alpha);
 			if (sum_prob >= z) {
-				res[i] = i;
+				res[i] = k;
 				break;
 			}
-		}
+		} //
+
+// done
 		assert(res[i] >= 1);
 		assert(res[i] <= zipf_dom);
 
 		res[i] += min - 1;
 	}
+#endif
 }
 
 NO_INLINE void
