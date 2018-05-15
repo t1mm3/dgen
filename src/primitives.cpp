@@ -176,7 +176,7 @@ NO_INLINE void
 tgen_zipf_filter_predicate(bool* R ge, bool*R found, double* R sum_probs, double* R z, size_t*R mid, int* R sel, size_t num)
 {
 	VectorExec(sel, num, [&] (auto m) {
-		found[m] = sum_probs[mid[m]] < z[m] | sum_probs[mid[m]-1] > z[m];
+		found[m] = (sum_probs[mid[m]] < z[m]) | (sum_probs[mid[m]-1] > z[m]);
 		ge[m] = sum_probs[mid[m]] >= z[m];
 	});
 }
