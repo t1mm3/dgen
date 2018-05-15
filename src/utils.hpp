@@ -110,4 +110,14 @@ inline static int log2_32 (uint32_t value)
     return tab32[(uint32_t)(value*0x07C4ACDD) >> 27];
 }
 
+#include <vector>
+
+struct ZipfHelper {
+	std::vector<double> sum_probs;
+	double c;
+
+	ZipfHelper(int64_t domain, double alpha);
+};
+
+
 #endif

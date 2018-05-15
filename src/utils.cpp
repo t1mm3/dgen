@@ -81,3 +81,20 @@ void vec_log10_64(int* __restrict__ res, uint64_t* __restrict__ x, size_t num, i
 		});
 	}	
 }
+
+#include <cmath>
+
+ZipfHelper::ZipfHelper(int64_t n, double alpha)
+{
+    c = 0.0;
+    for (int64_t i=1; i<=n; i++) {
+        c = c + (1.0 / pow((double) i, alpha));
+    }
+    c = 1.0 / c;
+
+    sum_probs.resize(n+1);
+    sum_probs[0] = 0;
+    for (int64_t i=1; i<=n; i++) {
+        sum_probs[i] = sum_probs[i-1] + c / pow((double) i, alpha);
+    }
+}

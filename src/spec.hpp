@@ -9,6 +9,7 @@ using mapbox::util::variant;
 using mapbox::util::recursive_wrapper;
 
 struct Dictionary;
+struct ZipfHelper;
 
 struct Sequential {};
 struct Uniform {};
@@ -16,7 +17,7 @@ struct Poisson { double mean = 1.0; };
 struct Binomial { int64_t t = 1; double p = 0.5; };
 struct NegBinomial { int64_t k = 1; double p = 0.5; };
 struct Geometric { double p = 0.5; };
-struct Zipf { double alpha = 0.5; };
+struct Zipf { double alpha = 0.5; ZipfHelper* helper = nullptr; };
 
 using ColGenType = variant<Uniform, Sequential, Poisson, Binomial, NegBinomial, Geometric, Zipf>;
 

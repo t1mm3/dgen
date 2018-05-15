@@ -30,6 +30,8 @@ configure_file(json_conf4.txt ${TEST_PATH}/json_conf4.txt)
 configure_file(json_conf4large.txt ${TEST_PATH}/json_conf4large.txt)
 configure_file(json_conf4large.txt.expect ${TEST_PATH}/json_conf4large.txt.expect COPYONLY)
 
+configure_file(conf_zipf1.txt ${TEST_PATH}/conf_zipf1.txt COPYONLY)
+
 configure_file(cards.py ${TEST_PATH}/cards.py COPYONLY)
 configure_file(diff_test.py ${TEST_PATH}/diff_test.py COPYONLY)
 configure_file(bench_conf1.txt ${TEST_PATH}/bench_conf1.txt)

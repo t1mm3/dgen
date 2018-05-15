@@ -163,63 +163,114 @@ tgen_zipf_uniform(double* R res, size_t num, int64_t seed, int* R tmp)
 
 template<typename T>
 NO_INLINE void
-tgen_zipf_round(T* R res, double* R sum_prob, double* R old_sum_prob,
-	double* R z, double alpha, double c, int64_t k,
+tgen_zipf_calc_mid(T* R res, size_t* R out, size_t* R hi, size_t* R lo,
 	int* R sel, size_t num)
 {
-	const double add = c / pow((double)k, alpha);
-
 	VectorExec(sel, num, [&] (auto m) {
-		sum_prob[m] = old_sum_prob[m] + add;
-		res[m] = k;
+		out[m] = floor((hi[m] + lo[m]) / 2);
+		res[m] = out[m];
+	});
+}
+
+NO_INLINE void
+tgen_zipf_filter_predicate(bool* R ge, bool*R found, double* R sum_probs, double* R z, size_t*R mid, int* R sel, size_t num)
+{
+	VectorExec(sel, num, [&] (auto m) {
+		found[m] = sum_probs[mid[m]] < z[m] | sum_probs[mid[m]-1] > z[m];
+		ge[m] = sum_probs[mid[m]] >= z[m];
+	});
+}
+
+NO_INLINE void
+tgen_zipf_filter_loop(bool*R out, size_t* R lo, size_t* R hi, int* R sel, size_t num)
+{
+	VectorExec(sel, num, [&] (auto m) {
+		out[m] = lo[m] <= hi[m];
 	});
 }
 
 NO_INLINE size_t
-tgen_zipf_round_sel(int* R out, double* R sum_prob, double* R z,
-	int* R sel, size_t num)
+select_pred(int*R out, bool* R pred, int*R sel, size_t num)
 {
 	size_t res = 0;
 	VectorExec(sel, num, [&] (auto m) {
 		out[res] = m;
-		res += (sum_prob[m] < z[m]);
+		res += !!pred[m];
 	});
 	return res;
 }
 
+NO_INLINE size_t
+select_not_pred(int*R out, bool* R pred, int*R sel, size_t num)
+{
+	size_t res = 0;
+	VectorExec(sel, num, [&] (auto m) {
+		out[res] = m;
+		res += !pred[m];
+	});
+	return res;
+}
+
+NO_INLINE void
+tgen_zipf_update_values(size_t* R lo, size_t* R mid, size_t* R hi, bool*R ge,
+	int* R sel, size_t num, int*R tmp)
+{
+	size_t curr = select_pred(tmp, ge, sel, num);
+
+	VectorExec(tmp, curr, [&] (auto m) {
+		hi[m] = mid[m]-1;
+	});
+
+	curr = select_not_pred(tmp, ge, sel, num);
+
+	VectorExec(tmp, curr, [&] (auto m) {
+		lo[m] = mid[m]+1;
+	});	
+}
+
+NO_INLINE void
+tgen_zipf_init_bin_search(size_t* R vlo, size_t* R vhi, double* R vz, size_t num,
+	int64_t zipf_dom)
+{
+	for (size_t i=0; i<num; i++) {
+		assert(vz[i] != 0);
+		assert(vz[i] != 1);
+		vlo[i] = 1;
+		vhi[i] = zipf_dom;
+	}
+}
+
+
 template<typename T>
 NO_INLINE void
-tgen_zipf(T* R res, size_t num, int64_t seed, int64_t min,
-	int64_t max, double alpha)
+tgen_zipf(T* res, size_t num, int64_t seed, int64_t min,
+	int64_t max, double alpha, double c, double* sum_probs,
+	bool* vpred, bool* vge, int* sel1, int* sel2,
+	size_t* vhi, size_t* vlo, size_t* vmid, double* vz)
 {
 	// inspred by: http://www.csee.usf.edu/~kchriste/tools/genzipf.c
+	// and https://stackoverflow.com/questions/9983239/how-to-generate-zipf-distributed-numbers-efficiently
 
 	int64_t dom = max - min;
 	int64_t zipf_dom = dom + 1; // allow 0
-	int64_t i, k;
-	double c = 0.0, z, sum_prob;
-
-	// Compute normalization constant
-	for (i=1; i<=zipf_dom; i++) {
-		c = c + (1.0 / pow((double) i, alpha));
-	}
-	c = 1.0 / c;
-
-	int sel1[1024];	
-	double vsum_prob[1024];
-	double vz[1024];
 
 	tgen_zipf_uniform(&vz[0], num, seed, &sel1[0]);
-
-	for (size_t i=0; i<num; i++) {
-		vsum_prob[i] = 0.0;
-	}
+	tgen_zipf_init_bin_search(vlo, vhi, vz, num, zipf_dom);
 
 	int* sel = nullptr;
-	for (k=1; k<zipf_dom; k++) {
-		tgen_zipf_round(res, &vsum_prob[0], &vsum_prob[0], &vz[0], alpha, c, k, sel, num);
-		num = tgen_zipf_round_sel(&sel1[0], &vsum_prob[0], &vz[0], sel, num);
+
+	while (num > 0) {
+		// calculate mid points
+		tgen_zipf_calc_mid<T>(res, &vmid[0], &vhi[0], &vlo[0], sel, num);
+
+		tgen_zipf_filter_predicate(&vge[0], &vpred[0], sum_probs, &vz[0], &vmid[0], sel, num);
+		num = select_pred(&sel1[0], &vpred[0], sel, num);
 		sel = &sel1[0];
+
+		tgen_zipf_update_values(&vlo[0], &vmid[0], &vhi[0], &vge[0], sel, num, &sel2[0]);
+
+		tgen_zipf_filter_loop(&vpred[0], &vlo[0], &vhi[0], sel, num);
+		num = select_pred(sel, &vpred[0], sel, num);
 	}
 
 	// Check and adapt domains
@@ -228,40 +279,16 @@ tgen_zipf(T* R res, size_t num, int64_t seed, int64_t min,
 		assert(res[i] <= zipf_dom);
 		res[i] += min - 1;
 	}
-
-#if 0
-	for (size_t i=0; i<num; i++) {
-// done
-		double z;
-		do {
-			z = uni(rng);
-		} while (z == 0 || z == 1);
-
-// todo
-		sum_prob = 0.0; //
-		for (k=1; k<zipf_dom; k++) { //
-			sum_prob += c / pow((double) k, alpha);
-			if (sum_prob >= z) {
-				res[i] = k;
-				break;
-			}
-		} //
-
-// done
-		assert(res[i] >= 1);
-		assert(res[i] <= zipf_dom);
-
-		res[i] += min - 1;
-	}
-#endif
 }
 
 NO_INLINE void
 gen_zipf(int64_t* R res, size_t num, int64_t seed, int64_t min, int64_t max,
-	double p, BaseType t)
+	double p, BaseType t, ZipfHelper* helper, bool* vpred, bool* vpred2, int* sel1, int* sel2,
+	size_t* pos1, size_t* pos2, size_t* pos3, double* tmp)
 {
 	switch (t) {
-#define A(C, B) case B: tgen_zipf<C>((C*)res, num, seed, min, max, p); break;
+#define A(C, B) case B: tgen_zipf<C>((C*)res, num, seed, min, max, p, \
+		helper->c, &helper->sum_probs[0], vpred, vpred2, sel1, sel2, pos1, pos2, pos3, tmp); break;
 	A(int8_t, I8);
 	A(uint8_t, U8);
 

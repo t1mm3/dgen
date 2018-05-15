@@ -26,7 +26,9 @@ gen_geometric(int64_t* res, size_t num, int64_t seed, int64_t min,
 
 void
 gen_zipf(int64_t* res, size_t num, int64_t seed, int64_t min,
-	int64_t max, double alpha, BaseType t);
+	int64_t max, double alpha, BaseType t, ZipfHelper* helper,
+	bool* vpred, bool* vpred2, int* sel1, int* sel2, size_t* pos1, size_t* pos2,
+	size_t* pos3, double* vdbl);
 
 void
 gen_seq(int64_t* res, size_t num, int64_t start, int64_t min,

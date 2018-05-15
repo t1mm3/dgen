@@ -35,10 +35,13 @@ struct VData {
 	char* s[g_vector_size];
 
 	bool tmp_pred[g_vector_size];
+	bool tmp_pred2[g_vector_size];
 	int tmp_sel[g_vector_size];
 	int tmp_sel2[g_vector_size];
 
 	int64_t tmp_vals[g_vector_size];
+
+	double tmp_dbl[g_vector_size];
 
 	BaseType res_type = I64;
 
@@ -277,7 +280,11 @@ gen_col(const ColType& ctype, const ColSpec& col, size_t colid, size_t start,
 					gen_geometric(a, num, start, cint.min, cint.max, ggeometric.p, scol.res_type);
 				},
 				[&] (Zipf& gzipf) {
-					gen_zipf(a, num, start, cint.min, cint.max, gzipf.alpha, scol.res_type);
+					assert(gzipf.helper);
+					static_assert(sizeof(size_t) <= sizeof(int64_t), "Size restriction due to cast");
+					gen_zipf(a, num, start, cint.min, cint.max, gzipf.alpha, scol.res_type, gzipf.helper,
+						&scol.tmp_pred[0], &scol.tmp_pred2[0], &scol.tmp_sel[0], &scol.tmp_sel2[0], &scol.len[0], &scol.pos[0],
+						(size_t*)&scol.tmp_vals[0], &scol.tmp_dbl[0]);
 				}
 			);
 
@@ -371,6 +378,49 @@ DoTask::operator()(Task&& t)
 	(*t.outp)(t, std::move(final));
 }
 
+struct PreprocessState {
+	std::vector<std::unique_ptr<Dictionary>> dictionaries;
+	std::vector<std::unique_ptr<ZipfHelper>> zipf_helpers;
+};
+
+void preprocess_col(PreprocessState& state, ColType& ctype);
+
+inline static void
+preprocess_col_int(PreprocessState& state, Integer& cint)
+{
+	cint.cgen.match(
+		[&] (Sequential& gseq) {},
+		[&] (Uniform& guni) {},
+		[&] (Poisson& gpoisson) {},
+		[&] (Binomial& gbin) {},
+		[&] (NegBinomial& gbin) {},
+		[&] (Geometric& ggeometric) {},
+		[&] (Zipf& gzipf) {
+			auto dom = cint.max - cint.min;
+			auto zipf_dom = dom + 1;
+			gzipf.helper = new ZipfHelper(zipf_dom, gzipf.alpha);
+			state.zipf_helpers.emplace_back(std::unique_ptr<ZipfHelper>(gzipf.helper));
+		}
+	);
+}
+
+void
+preprocess_col(PreprocessState& state, ColType& ctype)
+{
+	ctype.match(
+		[&] (String& cstr) {
+			if (!cstr.dict) {
+				cstr.dict = new FileDictionary(cstr.fname);
+			}
+			state.dictionaries.emplace_back(std::unique_ptr<Dictionary>(cstr.dict));
+			preprocess_col_int(state, cstr.index);
+		},
+		[&] (Integer& cint) {
+			preprocess_col_int(state, cint);			
+		}
+	);
+}
+
 NO_INLINE void
 generate(RelSpec& spec, Output& out)
 {
@@ -385,19 +435,11 @@ generate(RelSpec& spec, Output& out)
 		return;
 	}
 
-	std::vector<std::unique_ptr<Dictionary>> objs;
+	PreprocessState state;
 
 	// create dictionaries
 	for (auto& col : spec.cols) {
-		col.ctype.match(
-			[&] (String& cstr) {
-				if (!cstr.dict) {
-					cstr.dict = new FileDictionary(cstr.fname);
-				}
-				objs.emplace_back(std::unique_ptr<Dictionary>(cstr.dict));
-			},
-			[] (Integer cint) {}
-		);
+		preprocess_col(state, col.ctype);
 	}
 
 	auto num_threads = std::min(spec.threads, (spec.card / (g_chunk_size + g_chunk_size - 1)));
