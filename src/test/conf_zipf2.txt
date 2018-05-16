@@ -3,7 +3,7 @@
     "tuples" : 100000000,
     "threads" : 1,
     "columns" : [
-        { "integer" : { "gen" : {"zipf" : {"alpha" : 0.25}}, "min" : 10, "max" : 10000000 } }
+        { "integer" : { "gen" : {"zipf" : {"alpha" : 0.0}}, "min" : 10, "max" : 10000000 } }
     ],
     "format" : {
         "csv" : { "comma" : "|", "newline" : "\n"}

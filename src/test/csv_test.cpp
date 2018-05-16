@@ -36,7 +36,7 @@ CsvChecker::CsvChecker(bool str = false)
 
 	spec.cols = {
 		ColSpec {Integer {Sequential {}, 0, 101} },
-		ColSpec {Integer {Uniform {}, 0, 10013} },
+		ColSpec {Integer {Zipf {}, 0, 10013} },
 		ColSpec {Integer {Uniform {}, -100, 104200 } }, 
 	};
 
@@ -76,7 +76,7 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 		std::string line;
 		getline(ss, line, '\n');
 
-		std::cerr << "line='" << line << "'" << std::endl;
+		// std::cerr << "line='" << line << "'" << std::endl;
 
 		std::stringstream ls(line);
 		size_t col = 0;
@@ -94,7 +94,7 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 				[&] (Integer cint) {
 					BOOST_REQUIRE(val.size() > 0);
 
-					std::cerr << "str='" << val << "'" << val.length() << std::endl;
+					// std::cerr << "str='" << val << "'" << val.length() << std::endl;
 					BOOST_REQUIRE_EQUAL(strlen(val.c_str()), val.size());
 					auto ival = std::stoll(val);
 
@@ -239,3 +239,54 @@ BOOST_AUTO_TEST_CASE(json_parse_seq) {
 
 	csv();
 }
+
+BOOST_AUTO_TEST_CASE(json_parse_zipf1) {
+	CsvChecker csv;
+
+	g_chunk_size = 1024 + 128;
+
+	csv.spec.cols.clear();
+	csv.spec.card = 0;
+	csv.spec.threads = 0;
+	csv.enforce_seq = true;
+
+	parse_config(std::string(g_path) + std::string("conf_zipf1.txt"),
+		csv.spec);
+
+	csv();
+}
+
+
+BOOST_AUTO_TEST_CASE(json_parse_zipf2) {
+	CsvChecker csv;
+
+	g_chunk_size = 1024 + 128;
+
+	csv.spec.cols.clear();
+	csv.spec.card = 0;
+	csv.spec.threads = 0;
+	csv.enforce_seq = true;
+
+	parse_config(std::string(g_path) + std::string("conf_zipf2.txt"),
+		csv.spec);
+
+	csv();
+}
+
+
+BOOST_AUTO_TEST_CASE(json_parse_zipf4) {
+	CsvChecker csv;
+
+	g_chunk_size = 1024 + 128;
+
+	csv.spec.cols.clear();
+	csv.spec.card = 0;
+	csv.spec.threads = 0;
+	csv.enforce_seq = true;
+
+	parse_config(std::string(g_path) + std::string("conf_zipf4.txt"),
+		csv.spec);
+
+	csv();
+}
+

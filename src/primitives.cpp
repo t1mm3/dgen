@@ -278,6 +278,9 @@ tgen_zipf(T* res, size_t num, int64_t seed, int64_t min,
 		assert(res[i] >= 1);
 		assert(res[i] <= zipf_dom);
 		res[i] += min - 1;
+
+		assert(res[i] >= min);
+		assert(res[i] <= max);
 	}
 }
 

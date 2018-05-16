@@ -18,7 +18,7 @@ ADD_DEFINITIONS(
   -pedantic-errors
 )
 
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ") # -fsanitize=address
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -O3 -ftree-vectorize -ftree-slp-vectorize -funroll-all-loops -fpeel-loops -fomit-frame-pointer")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/concurrentqueue)
