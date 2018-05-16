@@ -282,7 +282,7 @@ gen_col(const ColType& ctype, const ColSpec& col, size_t colid, size_t start,
 				[&] (Zipf& gzipf) {
 					assert(gzipf.helper);
 					static_assert(sizeof(size_t) <= sizeof(int64_t), "Size restriction due to cast");
-					std::cout << "min=" << cint.min << " max=" << cint.max << std::endl;
+					// std::cout << "min=" << cint.min << " max=" << cint.max << std::endl;
 					gen_zipf(a, num, start, cint.min, cint.max, gzipf.alpha, scol.res_type, gzipf.helper,
 						&scol.tmp_pred[0], &scol.tmp_pred2[0], &scol.tmp_sel[0], &scol.tmp_sel2[0], &scol.len[0], &scol.pos[0],
 						(size_t*)&scol.tmp_vals[0], &scol.tmp_dbl[0]);
@@ -398,7 +398,7 @@ preprocess_col_int(PreprocessState& state, Integer& cint)
 		[&] (Geometric& ggeometric) {},
 		[&] (Zipf& gzipf) {
 			auto dom = cint.max - cint.min;
-			auto zipf_dom = dom + 1;
+			auto zipf_dom = dom;
 			gzipf.helper = new ZipfHelper(zipf_dom, gzipf.alpha);
 			state.zipf_helpers.emplace_back(std::unique_ptr<ZipfHelper>(gzipf.helper));
 		}

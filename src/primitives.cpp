@@ -252,35 +252,45 @@ tgen_zipf(T* res, size_t num, int64_t seed, int64_t min,
 	// and https://stackoverflow.com/questions/9983239/how-to-generate-zipf-distributed-numbers-efficiently
 
 	int64_t dom = max - min;
-	int64_t zipf_dom = dom + 1; // allow 0
+	int64_t zipf_dom = dom;
 
 	tgen_zipf_uniform(&vz[0], num, seed, &sel1[0]);
 	tgen_zipf_init_bin_search(vlo, vhi, vz, num, zipf_dom);
 
 	int* sel = nullptr;
 
-	while (num > 0) {
-		// calculate mid points
-		tgen_zipf_calc_mid<T>(res, &vmid[0], &vhi[0], &vlo[0], sel, num);
+	int64_t rtmp[1024];
 
-		tgen_zipf_filter_predicate(&vge[0], &vpred[0], sum_probs, &vz[0], &vmid[0], sel, num);
-		num = select_pred(&sel1[0], &vpred[0], sel, num);
+	size_t curr = num;
+
+	while (curr > 0) {
+		// calculate mid points
+		tgen_zipf_calc_mid<int64_t>(&rtmp[0], &vmid[0], &vhi[0], &vlo[0], sel, curr);
+
+		tgen_zipf_filter_predicate(&vge[0], &vpred[0], sum_probs, &vz[0], &vmid[0], sel, curr);
+		curr = select_pred(&sel1[0], &vpred[0], sel, curr);
 		sel = &sel1[0];
 
-		tgen_zipf_update_values(&vlo[0], &vmid[0], &vhi[0], &vge[0], sel, num, &sel2[0]);
+		tgen_zipf_update_values(&vlo[0], &vmid[0], &vhi[0], &vge[0], sel, curr, &sel2[0]);
 
-		tgen_zipf_filter_loop(&vpred[0], &vlo[0], &vhi[0], sel, num);
-		num = select_pred(sel, &vpred[0], sel, num);
+		tgen_zipf_filter_loop(&vpred[0], &vlo[0], &vhi[0], sel, curr);
+		curr = select_pred(sel, &vpred[0], sel, curr);
 	}
 
 	// Check and adapt domains
-	for (size_t i=0; i<num; i++) {
-		assert(res[i] >= 1);
-		assert(res[i] <= zipf_dom);
-		res[i] += min - 1;
+	// std::cerr << "min=" << min << std::endl;
 
-		assert(res[i] >= min);
-		assert(res[i] <= max);
+	for (size_t i=0; i<num; i++) {
+		assert(res[i] >= 0);
+		assert(res[i] <= zipf_dom);
+
+		int64_t t = rtmp[i] + min;
+		res[i] = t;
+
+		// std::cerr << "res=" << res[i] << " t=" << t << std::endl;
+
+		assert(t >= min);
+		assert(t <= max);
 	}
 }
 

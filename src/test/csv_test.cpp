@@ -99,6 +99,8 @@ CsvChecker::verify(const std::string& data, RelSpec& spec)
 					auto ival = std::stoll(val);
 
 					if (ival < cint.min || ival > cint.max) {
+						std::cerr << "line='" << line << "'" << std::endl;
+						std::cerr << "str='" << val << "'" << val.length() << std::endl;
 						std::cerr << "col=" << col << " ival=" << ival << " from '" << val << "' min=" << cint.min << " max=" << cint.max << std::endl; 
 					}
 					BOOST_REQUIRE(ival >= cint.min);
@@ -248,7 +250,6 @@ BOOST_AUTO_TEST_CASE(json_parse_zipf1) {
 	csv.spec.cols.clear();
 	csv.spec.card = 0;
 	csv.spec.threads = 0;
-	csv.enforce_seq = true;
 
 	parse_config(std::string(g_path) + std::string("conf_zipf1.txt"),
 		csv.spec);
@@ -265,7 +266,6 @@ BOOST_AUTO_TEST_CASE(json_parse_zipf2) {
 	csv.spec.cols.clear();
 	csv.spec.card = 0;
 	csv.spec.threads = 0;
-	csv.enforce_seq = true;
 
 	parse_config(std::string(g_path) + std::string("conf_zipf2.txt"),
 		csv.spec);
@@ -282,7 +282,6 @@ BOOST_AUTO_TEST_CASE(json_parse_zipf4) {
 	csv.spec.cols.clear();
 	csv.spec.card = 0;
 	csv.spec.threads = 0;
-	csv.enforce_seq = true;
 
 	parse_config(std::string(g_path) + std::string("conf_zipf4.txt"),
 		csv.spec);
