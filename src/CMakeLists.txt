@@ -36,6 +36,8 @@ target_link_libraries(libdgen ${CMAKE_THREAD_LIBS_INIT} ${Boost_LIBRARIES})
 add_executable(dgen gen.cpp)
 target_link_libraries(dgen libdgen)
 
+install(TARGETS dgen DESTINATION bin)
+
 ## Testing
 enable_testing()
 add_subdirectory(test)
